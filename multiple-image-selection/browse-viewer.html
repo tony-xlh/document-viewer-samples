@@ -33,11 +33,16 @@
       <input type="file" id="files" name="files" multiple onchange="filesSelected()"/>
     </label>
     <div id="viewer"></div>
-    <button onclick="saveAsPDF()">Save as PDF</button>
+    <div style="display: flex;">
+      <button onclick="deleteSelected()">Delete Selected</button>
+      <button onclick="saveAsPDF()">Save as PDF</button>
+    </div>
+    
   </div>
 </body>
 <script>
 let doc;
+let browseViewer;
 init();
 async function init(){
   //Dynamsoft.DDV.Core.license = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==";
@@ -46,7 +51,7 @@ async function init(){
   Dynamsoft.DDV.Core.engineResourcePath = "https://cdn.jsdelivr.net/npm/dynamsoft-document-viewer@1.1.0/dist/engine";// Lead to a folder containing the distributed WASM files
   await Dynamsoft.DDV.Core.init();
   Dynamsoft.DDV.setProcessingHandler("imageFilter", new Dynamsoft.DDV.ImageFilter());
-  const browseViewer = new Dynamsoft.DDV.BrowseViewer({
+  browseViewer = new Dynamsoft.DDV.BrowseViewer({
     container: document.getElementById("viewer"),
   });
   const docManager = Dynamsoft.DDV.documentManager;
@@ -98,6 +103,11 @@ function downloadBlob(blob){
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+function deleteSelected() {
+  const indices = browseViewer.getSelectedPageIndices();
+  doc.deletePages(indices);
 }
 
 </script>
