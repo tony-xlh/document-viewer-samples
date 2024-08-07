@@ -122,13 +122,29 @@ function appendImage(url){
     if (isMultiSelect) {
       toggleSelection(thumbnailContainer);
     } else if (isRangeSelect && lastSelectedIndex !== -1) {
-      selectRange(lastSelectedIndex, index);
+      const firstSelectedIndex = getFirstSelectedIndex();
+      if (firstSelectedIndex != -1) {
+        selectRange(firstSelectedIndex, index);
+      }else{
+        selectRange(lastSelectedIndex, index);
+      }
     } else {
       clearSelection();
       selectOne(thumbnailContainer);
     }
     lastSelectedIndex = index;
   })
+}
+
+function getFirstSelectedIndex(){
+  const thumbnails = document.getElementsByClassName("thumbnail");
+  for (let index = 0; index < thumbnails.length; index++) {
+    const item = thumbnails[index];
+    if (item.classList.contains("selected")) {
+      return index;
+    }
+  }
+  return -1;
 }
 
 function getIndex(thumbnail){
