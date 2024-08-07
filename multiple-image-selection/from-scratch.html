@@ -76,6 +76,7 @@
 </body>
 <script>
 let doc;
+let lastSelectedIndex = -1;
 
 async function filesSelected(){
   let filesInput = document.getElementById("files");
@@ -115,8 +116,30 @@ function appendImage(url){
   thumbnailContainer.appendChild(img);
   viewer.appendChild(thumbnailContainer);
   thumbnailContainer.addEventListener("click",function(){
-    thumbnailContainer.classList.add("selected");
+    const isMultiSelect = event.ctrlKey || event.metaKey;
+    const isRangeSelect = event.shiftKey;
+    const index = getIndex(thumbnailContainer);
+    if (isMultiSelect) {
+      toggleSelection(thumbnailContainer);
+    } else if (isRangeSelect && lastSelectedIndex !== -1) {
+      selectRange(lastSelectedIndex, index);
+    } else {
+      clearSelection();
+      selectOne(thumbnailContainer);
+    }
+    lastSelectedIndex = index;
   })
+}
+
+function getIndex(thumbnail){
+  const thumbnails = document.getElementsByClassName("thumbnail");
+  for (let index = 0; index < thumbnails.length; index++) {
+    const item = thumbnails[index];
+    if (item === thumbnail) {
+      return index;
+    }
+  }
+  return -1;
 }
 
 function readFileAsBlob(file){
@@ -145,6 +168,31 @@ function deleteSelected(){
     }
   }
   updateWidthBaseOnScrollBar();
+}
+
+function toggleSelection(thumbnail) {
+  thumbnail.classList.toggle('selected');
+}
+
+function selectOne(thumbnail) {
+  thumbnail.classList.add('selected');
+}
+
+function clearSelection() {
+  let thumbnails = document.querySelectorAll(".thumbnail");
+  thumbnails.forEach(thumbnail => thumbnail.classList.remove('selected'));
+}
+
+function selectRange(start, end) {
+  let thumbnails = document.querySelectorAll(".thumbnail");
+  clearSelection();
+  const [startIndex, endIndex] = start < end ? [start, end] : [end, start];
+  console.log("range selection");
+  console.log(startIndex);
+  console.log(endIndex);
+  for (let i = startIndex; i <= endIndex; i++) {
+    selectOne(thumbnails[i]);
+  }
 }
 
 
