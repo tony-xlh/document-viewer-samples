@@ -93,7 +93,9 @@ async function filesSelected(){
 function updateWidthBaseOnScrollBar(){
   let viewer = document.getElementById("viewer");
   if (viewer.scrollHeight>viewer.clientHeight) {
-    document.documentElement.style.setProperty('--thumbnail-width', "130px");
+    let scrollBarWidth = viewer.offsetWidth - viewer.clientWidth;
+    let width = 140 - Math.ceil(scrollBarWidth/2);
+    document.documentElement.style.setProperty('--thumbnail-width', width + "px");
   }else{
     document.documentElement.style.setProperty('--thumbnail-width', "140px");
   }
