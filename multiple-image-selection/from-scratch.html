@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Browse Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/dynamsoft-document-viewer@1.1.0/dist/ddv.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dynamsoft-document-viewer@1.1.0/dist/ddv.css">
+</head>
+<style>
+  :root {
+	  --thumbnail-width: 140px;
+	}
+  .container {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+  }
+  
+  .container h2 {
+    text-align: center;
+  }
+
+  #viewer {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    width: 320px;
+    height: 480px;
+    overflow: auto;
+    background: lightgray;
+    border: 1px solid black;
+  }
+
+  .thumbnail {
+    display: inline-flex;
+    width: var(--thumbnail-width);
+    height: 200px;
+    padding: 4px;
+    margin: 5px;
+    align-items: center;
+  }
+
+  .thumbnail:hover {
+    background: gray;
+  }
+
+  .thumbnail.selected {
+    background: gray;
+  }
+
+  .thumbnail.selected img {
+    border: 1px solid orange;
+  }
+
+  .thumbnail img {
+    width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border: 1px solid transparent;
+  }
+</style>
+<body>
+  <div class="container">
+    <h2>Multiple Selection of Image</h2>
+    <label>
+      Select images to load:
+      <br/>
+      <input type="file" id="files" name="files" multiple onchange="filesSelected()"/>
+    </label>
+    <div id="viewer"></div>
+    <button onclick="deleteSelected()">Deleted Selected</button>
+  </div>
+</body>
+<script>
+let doc;
+
+async function filesSelected(){
+  let filesInput = document.getElementById("files");
+  let files = filesInput.files;
+  if (files.length>0) {
+    for (let index = 0; index < files.length; index++) {
+      const file = files[index];
+      const blob = await readFileAsBlob(file);
+      const url = URL.createObjectURL(blob);
+      appendImage(url);
+    }
+    updateWidthBaseOnScrollBar();
+  }
+}
+
+function updateWidthBaseOnScrollBar(){
+  let viewer = document.getElementById("viewer");
+  if (viewer.scrollHeight>viewer.clientHeight) {
+    document.documentElement.style.setProperty('--thumbnail-width', "130px");
+  }else{
+    document.documentElement.style.setProperty('--thumbnail-width', "140px");
+  }
+}
+
+function appendImage(url){
+  let viewer = document.getElementById("viewer");
+  let thumbnailContainer = document.createElement("div");
+  thumbnailContainer.className = "thumbnail";
+  let img = document.createElement("img");
+  img.src = url;
+  img.onload = function(){
+    let height = 130/(img.naturalWidth/img.naturalHeight);
+    img.style.height = Math.floor(height) + "px";
+  }
+  thumbnailContainer.appendChild(img);
+  viewer.appendChild(thumbnailContainer);
+  thumbnailContainer.addEventListener("click",function(){
+    thumbnailContainer.classList.add("selected");
+  })
+}
+
+function readFileAsBlob(file){
+  return new Promise((resolve, reject) => {
+    const fileReader = new FileReader();
+    fileReader.onload = async function(e){
+      //const blob = window.dataURLtoBlob(e.target.result);
+      const response = await fetch(e.target.result);
+      const blob = await response.blob();
+      resolve(blob);
+    };
+    fileReader.onerror = function () {
+      reject('oops, something went wrong.');
+    };
+    fileReader.readAsDataURL(file); 
+  })
+}
+
+function deleteSelected(){
+  let viewer = document.getElementById("viewer");
+  let thumbnails = document.getElementsByClassName("thumbnail");
+  for (let index = thumbnails.length - 1; index >= 0; index--) {
+    const thumbnail = thumbnails[index];
+    if (thumbnail.classList.contains("selected")) {
+      viewer.removeChild(thumbnail);
+    }
+  }
+  updateWidthBaseOnScrollBar();
+}
+
+
+
+</script>
+</html>
