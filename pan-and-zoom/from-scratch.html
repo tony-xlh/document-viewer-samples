@@ -63,10 +63,11 @@ async function filesSelected(){
 }
 
 function zoom(zoomin,percentOffset){
+  let offset = percentOffset ?? 0.1;
   if (zoomin) {
-    currentPercent = currentPercent + percentOffset ?? 0.1;
+    currentPercent = currentPercent + offset;
   }else{
-    currentPercent = currentPercent - percentOffset ?? 0.1;
+    currentPercent = currentPercent - offset;
   }
   currentPercent = Math.max(0.1,currentPercent);
   resizeImage(currentPercent);
@@ -76,6 +77,7 @@ function registerEvents(){
   let img = document.getElementById("image");
   let viewer = document.getElementById("viewer");
   img.addEventListener("wheel",function(e){
+    console.log(e);
     if (e.deltaY < 0) {
       zoom(true);
     }else{
