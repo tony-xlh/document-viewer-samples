@@ -77,12 +77,14 @@ function registerEvents(){
   let img = document.getElementById("image");
   let viewer = document.getElementById("viewer");
   img.addEventListener("wheel",function(e){
-    if (e.deltaY < 0) {
-      zoom(true);
-    }else{
-      zoom(false);
+    if (e.ctrlKey || e.metaKey) {
+      if (e.deltaY < 0) {
+        zoom(true);
+      }else{
+        zoom(false);
+      }
+      e.preventDefault();
     }
-    e.preventDefault();
   });
   img.addEventListener("pointerdown",function(e){
     previousDistance = undefined;
