@@ -77,7 +77,6 @@ function registerEvents(){
   let img = document.getElementById("image");
   let viewer = document.getElementById("viewer");
   img.addEventListener("wheel",function(e){
-    console.log(e);
     if (e.deltaY < 0) {
       zoom(true);
     }else{
@@ -133,9 +132,8 @@ function loadImage(url){
   img.src = url;
   img.onload = function(){
     let viewer = document.getElementById("viewer");
-    let borderWidth = 1;
-    let padding = 10;
-    let percent = (viewer.offsetWidth - padding*2 - borderWidth*2)/img.naturalWidth;
+
+    let percent = 1.0;
     resizeImage(percent);
   }
 }
@@ -143,8 +141,13 @@ function loadImage(url){
 function resizeImage(percent){
   currentPercent = percent;
   let img = document.getElementById("image");
-  img.style.width = img.naturalWidth*percent + "px";
-  img.style.height = img.naturalHeight*percent + "px";
+  let viewer = document.getElementById("viewer");
+  let borderWidth = 1;
+  let padding = 10;
+  let ratio = img.naturalWidth/img.naturalHeight;
+  let newWidth = (viewer.offsetWidth - borderWidth*2 - padding*2) * percent
+  img.style.width = newWidth + "px";
+  img.style.height = newWidth/ratio + "px";
 }
 
 function readFileAsBlob(file){
