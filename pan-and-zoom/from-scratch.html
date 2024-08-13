@@ -48,6 +48,7 @@
 let currentPercent;
 let downPoint;
 let downScrollPosition;
+let previousDistance;
 registerEvents();
 
 async function filesSelected(){
@@ -61,20 +62,29 @@ async function filesSelected(){
   }
 }
 
+function zoom(zoomin,percentOffset){
+  if (zoomin) {
+    currentPercent = currentPercent + percentOffset ?? 0.1;
+  }else{
+    currentPercent = currentPercent - percentOffset ?? 0.1;
+  }
+  currentPercent = Math.max(0.1,currentPercent);
+  resizeImage(currentPercent);
+}
+
 function registerEvents(){
   let img = document.getElementById("image");
   let viewer = document.getElementById("viewer");
   img.addEventListener("wheel",function(e){
     if (e.deltaY < 0) {
-      currentPercent = currentPercent + 0.1;
+      zoom(true);
     }else{
-      currentPercent = currentPercent - 0.1;
+      zoom(false);
     }
-    currentPercent = Math.max(0.1,currentPercent);
-    resizeImage(currentPercent);
     e.preventDefault();
   });
   img.addEventListener("pointerdown",function(e){
+    previousDistance = undefined;
     downPoint = {x:e.clientX,y:e.clientY};
     downScrollPosition = {x:viewer.scrollLeft,y:viewer.scrollTop}
   });
@@ -91,6 +101,29 @@ function registerEvents(){
       viewer.scrollTop = newScrollTop;
     }
   });
+  img.addEventListener("touchmove",function(e){
+    if (e.touches.length === 2) {
+      const distance = getDistanceBetweenTwoTouches(e.touches[0],e.touches[1]);
+      if (previousDistance) {
+        if ((distance - previousDistance)>0) { //zoom
+          zoom(true,0.02);
+        }else{
+          zoom(false,0.02);
+        }
+        previousDistance = distance;
+      }else{
+        previousDistance = distance;
+      }
+    }
+    e.preventDefault();
+  });
+}
+
+function getDistanceBetweenTwoTouches(touch1,touch2){
+  const offsetX = touch1.clientX - touch2.clientX;
+  const offsetY = touch1.clientY - touch2.clientY;
+  const distance = offsetX * offsetX + offsetY + offsetY;
+  return distance;
 }
 
 function loadImage(url){
