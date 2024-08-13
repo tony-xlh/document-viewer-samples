@@ -40,12 +40,16 @@
       <input type="file" id="files" name="files" onchange="filesSelected()"/>
     </label>
     <div id="viewer">
-      <img id="image"/>
+      <img id="image" draggable="false"/>
     </div>
   </div>
 </body>
 <script>
 let currentPercent;
+let downPoint;
+let downScrollPosition;
+registerEvents();
+
 async function filesSelected(){
   let filesInput = document.getElementById("files");
   let files = filesInput.files;
@@ -55,6 +59,38 @@ async function filesSelected(){
     const url = URL.createObjectURL(blob);
     loadImage(url);
   }
+}
+
+function registerEvents(){
+  let img = document.getElementById("image");
+  let viewer = document.getElementById("viewer");
+  img.addEventListener("wheel",function(e){
+    if (e.deltaY < 0) {
+      currentPercent = currentPercent + 0.1;
+    }else{
+      currentPercent = currentPercent - 0.1;
+    }
+    currentPercent = Math.max(0.1,currentPercent);
+    resizeImage(currentPercent);
+    e.preventDefault();
+  });
+  img.addEventListener("pointerdown",function(e){
+    downPoint = {x:e.clientX,y:e.clientY};
+    downScrollPosition = {x:viewer.scrollLeft,y:viewer.scrollTop}
+  });
+  img.addEventListener("pointerup",function(e){
+    downPoint = undefined;
+  });
+  img.addEventListener("pointermove",function(e){
+    if (downPoint) {
+      let offsetX = e.clientX - downPoint.x;
+      let offsetY = e.clientY - downPoint.y;
+      let newScrollLeft = downScrollPosition.x - offsetX;
+      let newScrollTop = downScrollPosition.y - offsetY;
+      viewer.scrollLeft = newScrollLeft;
+      viewer.scrollTop = newScrollTop;
+    }
+  });
 }
 
 function loadImage(url){
