@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Browse Viewer</title>
+</head>
+<style>
+  .container {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+  }
+  
+  .container h2 {
+    text-align: center;
+  }
+
+  #viewer {
+    width: 320px;
+    height: 480px;
+    padding: 10px;
+    border: 1px solid black;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+  }
+
+  #image {
+    margin: auto;
+  }
+</style>
+<body>
+  <div class="container">
+    <h2>Image Pan and Zoom</h2>
+    <label>
+      Select an image:
+      <br/>
+      <input type="file" id="files" name="files" onchange="filesSelected()"/>
+    </label>
+    <div id="viewer">
+      <img id="image"/>
+    </div>
+  </div>
+</body>
+<script>
+let currentPercent;
+async function filesSelected(){
+  let filesInput = document.getElementById("files");
+  let files = filesInput.files;
+  if (files.length>0) {
+    const file = files[0];
+    const blob = await readFileAsBlob(file);
+    const url = URL.createObjectURL(blob);
+    loadImage(url);
+  }
+}
+
+function loadImage(url){
+  let img = document.getElementById("image");
+  img.src = url;
+  img.onload = function(){
+    let viewer = document.getElementById("viewer");
+    let borderWidth = 1;
+    let padding = 10;
+    let percent = (viewer.offsetWidth - padding*2 - borderWidth*2)/img.naturalWidth;
+    resizeImage(percent);
+  }
+}
+
+function resizeImage(percent){
+  currentPercent = percent;
+  let img = document.getElementById("image");
+  img.style.width = img.naturalWidth*percent + "px";
+  img.style.height = img.naturalHeight*percent + "px";
+}
+
+function readFileAsBlob(file){
+  return new Promise((resolve, reject) => {
+    const fileReader = new FileReader();
+    fileReader.onload = async function(e){
+      //const blob = window.dataURLtoBlob(e.target.result);
+      const response = await fetch(e.target.result);
+      const blob = await response.blob();
+      resolve(blob);
+    };
+    fileReader.onerror = function () {
+      reject('oops, something went wrong.');
+    };
+    fileReader.readAsDataURL(file); 
+  })
+}
+</script>
+</html>
