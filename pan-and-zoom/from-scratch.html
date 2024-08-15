@@ -49,7 +49,7 @@ let currentPercent;
 let downPoint;
 let downScrollPosition;
 let previousDistance;
-let mouseMovePoint;
+let pointerPoint;
 let touchDataStore = {moveable:false};
 let pinching = false;
 registerEvents();
@@ -93,24 +93,19 @@ function registerEvents(){
   img.addEventListener("pointerdown",function(e){
     previousDistance = undefined;
     downPoint = {x:e.clientX,y:e.clientY};
+    pointerPoint = {x:e.offsetX,y:e.offsetY};
     downScrollPosition = {x:viewer.scrollLeft,y:viewer.scrollTop}
   });
   img.addEventListener("pointerup",function(e){
     downPoint = undefined;
+    pointerPoint = undefined;
   });
   img.addEventListener("pointerleave",function(e){
-    mouseMovePoint = undefined;
+    pointerPoint = undefined;
   });
-  img.addEventListener("pointermove",function(e){
-    mouseMovePoint = {x:e.offsetX,y:e.offsetY};
-    if (downPoint && pinching === false) {
-      let offsetX = e.clientX - downPoint.x;
-      let offsetY = e.clientY - downPoint.y;
-      let newScrollLeft = downScrollPosition.x - offsetX;
-      let newScrollTop = downScrollPosition.y - offsetY;
-      viewer.scrollLeft = newScrollLeft;
-      viewer.scrollTop = newScrollTop;
-    }
+  img.addEventListener("mousemove",function(e){
+    pointerPoint = {x:e.offsetX,y:e.offsetY};
+    pan(e);
   });
   img.addEventListener("touchmove",function(event){
     if (!touchDataStore.moveable) {
@@ -121,8 +116,7 @@ function registerEvents(){
     let touches = event.touches;
     let events = touches[0];
     let events2 = touches[1];
-
-    if (events2) {
+    if (touches.length === 2) {
       pinching = true;
       if (!touchDataStore.clientX2) {
         touchDataStore.clientX2 = events2.clientX;
@@ -149,9 +143,11 @@ function registerEvents(){
         x: touchDataStore.clientX2,
         y: touchDataStore.clientY2
       });
-
       let newScale = touchDataStore.originScale * zoom;
-      resizeImage(newScale);
+
+      resizeImage(newScale,false);
+    }else{
+      pan(event.touches[0]);
     }
   });
   img.addEventListener('touchstart', function (event) {
@@ -161,10 +157,14 @@ function registerEvents(){
     event.preventDefault();
     touchDataStore.clientX = events.clientX;
     touchDataStore.clientY = events.clientY;
+    touchDataStore.offsetX = events.offsetX;
+    touchDataStore.offsetY = events.offsetY;
     touchDataStore.moveable = true;
     if (events2) {
       touchDataStore.clientX2 = events2.clientX;
       touchDataStore.clientY2 = events2.clientY;
+      touchDataStore.offsetX2 = events2.offsetX;
+      touchDataStore.offsetY2 = events2.offsetY;
     }
     touchDataStore.originScale = currentPercent || 1;
   });
@@ -173,7 +173,30 @@ function registerEvents(){
     pinching = false;
     delete touchDataStore.clientX2;
     delete touchDataStore.clientY2;
+    delete touchDataStore.offsetX2;
+    delete touchDataStore.offsetY2;
   });
+}
+
+function pan(e) {
+  if (downPoint) {
+    let offsetX = e.clientX - downPoint.x;
+    let offsetY = e.clientY - downPoint.y;
+    let newScrollLeft = downScrollPosition.x - offsetX;
+    let newScrollTop = downScrollPosition.y - offsetY;
+    viewer.scrollLeft = newScrollLeft;
+    viewer.scrollTop = newScrollTop;
+  }
+}
+
+function setCenterPoint(){
+  let minX = Math.min(touchDataStore.offsetX,touchDataStore.offsetX2);
+  let maxX = Math.max(touchDataStore.offsetX,touchDataStore.offsetX2);
+  let minY = Math.min(touchDataStore.offsetY,touchDataStore.offsetY2);
+  let maxY = Math.max(touchDataStore.offsetY,touchDataStore.offsetY2);
+  let centerX = (maxX - minX)/2 + minX;
+  let centerY = (maxY - minY)/2 + minY;
+  pointerPoint = {x:centerX,y:centerY};
 }
 
 function loadImage(url){
@@ -186,15 +209,15 @@ function loadImage(url){
   }
 }
 
-function resizeImage(percent){
+function resizeImage(percent,followTrigger){
   currentPercent = percent;
   let img = document.getElementById("image");
   let viewer = document.getElementById("viewer");
   let percentX;
   let percentY;
-  if (mouseMovePoint && mouseMovePoint.x) {
-    percentX = mouseMovePoint.x / img.clientWidth;
-    percentY = mouseMovePoint.y / img.clientHeight;
+  if (pointerPoint && pointerPoint.x) {
+    percentX = pointerPoint.x / img.clientWidth;
+    percentY = pointerPoint.y / img.clientHeight;
   } else {
     percentX = viewer.scrollLeft / viewer.scrollWidth;
     percentY = viewer.scrollTop / viewer.scrollHeight;
@@ -203,7 +226,9 @@ function resizeImage(percent){
   let newWidth = (viewer.offsetWidth - padding()) * percent
   img.style.width = newWidth + "px";
   img.style.height = newWidth/ratio + "px";
-  keepScrollbarPosition(percentX,percentY);
+  if (followTrigger) {
+    keepScrollbarPosition(percentX,percentY);
+  }
 }
 
 function padding(){
@@ -213,8 +238,8 @@ function padding(){
 }
 
 function keepScrollbarPosition(percentX,percentY) {
-  let width = viewer.scrollWidth - viewer.clientWidth;
-  let height = viewer.scrollHeight - viewer.clientHeight;
+  let width = viewer.scrollWidth - viewer.clientWidth - padding();
+  let height = viewer.scrollHeight - viewer.clientHeight - padding();
   viewer.scrollTo(width * percentX, height * percentY);
 }
 
