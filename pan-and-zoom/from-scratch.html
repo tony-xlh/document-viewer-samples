@@ -52,6 +52,7 @@ let previousDistance;
 let pointerPoint;
 let touchDataStore = {moveable:false};
 let pinching = false;
+let resizing = false;
 registerEvents();
 
 async function filesSelected(){
@@ -144,8 +145,7 @@ function registerEvents(){
         y: touchDataStore.clientY2
       });
       let newScale = touchDataStore.originScale * zoom;
-
-      resizeImage(newScale,false);
+      resizeImage(newScale);
     }else{
       pan(event.touches[0]);
     }
@@ -157,14 +157,10 @@ function registerEvents(){
     event.preventDefault();
     touchDataStore.clientX = events.clientX;
     touchDataStore.clientY = events.clientY;
-    touchDataStore.offsetX = events.offsetX;
-    touchDataStore.offsetY = events.offsetY;
     touchDataStore.moveable = true;
     if (events2) {
       touchDataStore.clientX2 = events2.clientX;
       touchDataStore.clientY2 = events2.clientY;
-      touchDataStore.offsetX2 = events2.offsetX;
-      touchDataStore.offsetY2 = events2.offsetY;
     }
     touchDataStore.originScale = currentPercent || 1;
   });
@@ -173,8 +169,6 @@ function registerEvents(){
     pinching = false;
     delete touchDataStore.clientX2;
     delete touchDataStore.clientY2;
-    delete touchDataStore.offsetX2;
-    delete touchDataStore.offsetY2;
   });
 }
 
@@ -189,16 +183,6 @@ function pan(e) {
   }
 }
 
-function setCenterPoint(){
-  let minX = Math.min(touchDataStore.offsetX,touchDataStore.offsetX2);
-  let maxX = Math.max(touchDataStore.offsetX,touchDataStore.offsetX2);
-  let minY = Math.min(touchDataStore.offsetY,touchDataStore.offsetY2);
-  let maxY = Math.max(touchDataStore.offsetY,touchDataStore.offsetY2);
-  let centerX = (maxX - minX)/2 + minX;
-  let centerY = (maxY - minY)/2 + minY;
-  pointerPoint = {x:centerX,y:centerY};
-}
-
 function loadImage(url){
   let img = document.getElementById("image");
   img.src = url;
@@ -209,26 +193,31 @@ function loadImage(url){
   }
 }
 
-function resizeImage(percent,followTrigger){
-  currentPercent = percent;
-  let img = document.getElementById("image");
-  let viewer = document.getElementById("viewer");
-  let percentX;
-  let percentY;
-  if (pointerPoint && pointerPoint.x) {
-    percentX = pointerPoint.x / img.clientWidth;
-    percentY = pointerPoint.y / img.clientHeight;
-  } else {
-    percentX = viewer.scrollLeft / viewer.scrollWidth;
-    percentY = viewer.scrollTop / viewer.scrollHeight;
+function resizeImage(percent){
+  if (resizing) {
+    return;
   }
-  let ratio = img.naturalWidth/img.naturalHeight;
-  let newWidth = (viewer.offsetWidth - padding()) * percent
-  img.style.width = newWidth + "px";
-  img.style.height = newWidth/ratio + "px";
-  if (followTrigger) {
+  resizing = true;
+  setTimeout(function(){
+    currentPercent = percent;
+    let img = document.getElementById("image");
+    let viewer = document.getElementById("viewer");
+    let percentX;
+    let percentY;
+    if (pointerPoint && pointerPoint.x) {
+      percentX = pointerPoint.x / img.clientWidth;
+      percentY = pointerPoint.y / img.clientHeight;
+    } else {
+      percentX = viewer.scrollLeft / viewer.scrollWidth;
+      percentY = viewer.scrollTop / viewer.scrollHeight;
+    }
+    let ratio = img.naturalWidth/img.naturalHeight;
+    let newWidth = (viewer.offsetWidth - padding()) * percent
+    img.style.width = newWidth + "px";
+    img.style.height = newWidth/ratio + "px";
     keepScrollbarPosition(percentX,percentY);
-  }
+    resizing = false;
+  },20)
 }
 
 function padding(){
