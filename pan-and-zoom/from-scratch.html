@@ -103,6 +103,7 @@ function registerEvents(){
   });
   img.addEventListener("pointerleave",function(e){
     pointerPoint = undefined;
+    downPoint = undefined;
   });
   img.addEventListener("mousemove",function(e){
     pointerPoint = {x:e.offsetX,y:e.offsetY};
