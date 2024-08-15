@@ -49,6 +49,8 @@ let currentPercent;
 let downPoint;
 let downScrollPosition;
 let previousDistance;
+let mouseMovePoint;
+
 registerEvents();
 
 async function filesSelected(){
@@ -78,12 +80,13 @@ function registerEvents(){
   let viewer = document.getElementById("viewer");
   img.addEventListener("wheel",function(e){
     if (e.ctrlKey || e.metaKey) {
+      e.stopPropagation();
+      e.preventDefault();
       if (e.deltaY < 0) {
         zoom(true);
       }else{
         zoom(false);
       }
-      e.preventDefault();
     }
   });
   img.addEventListener("pointerdown",function(e){
@@ -94,7 +97,11 @@ function registerEvents(){
   img.addEventListener("pointerup",function(e){
     downPoint = undefined;
   });
+  img.addEventListener("pointerleave",function(e){
+    mouseMovePoint = undefined;
+  });
   img.addEventListener("pointermove",function(e){
+    mouseMovePoint = {x:e.offsetX,y:e.offsetY};
     if (downPoint) {
       let offsetX = e.clientX - downPoint.x;
       let offsetY = e.clientY - downPoint.y;
@@ -134,7 +141,6 @@ function loadImage(url){
   img.src = url;
   img.onload = function(){
     let viewer = document.getElementById("viewer");
-
     let percent = 1.0;
     resizeImage(percent);
   }
@@ -144,12 +150,32 @@ function resizeImage(percent){
   currentPercent = percent;
   let img = document.getElementById("image");
   let viewer = document.getElementById("viewer");
-  let borderWidth = 1;
-  let padding = 10;
+  let percentX;
+  let percentY;
+  if (mouseMovePoint && mouseMovePoint.x) {
+    percentX = mouseMovePoint.x / img.clientWidth;
+    percentY = mouseMovePoint.y / img.clientHeight;
+  } else {
+    percentX = viewer.scrollLeft / viewer.scrollWidth;
+    percentY = viewer.scrollTop / viewer.scrollHeight;
+  }
   let ratio = img.naturalWidth/img.naturalHeight;
-  let newWidth = (viewer.offsetWidth - borderWidth*2 - padding*2) * percent
+  let newWidth = (viewer.offsetWidth - padding()) * percent
   img.style.width = newWidth + "px";
   img.style.height = newWidth/ratio + "px";
+  keepScrollbarPosition(percentX,percentY);
+}
+
+function padding(){
+  let borderWidth = 1;
+  let padding = 10;
+  return borderWidth*2 + padding*2;
+}
+
+function keepScrollbarPosition(percentX,percentY) {
+  let width = viewer.scrollWidth - viewer.clientWidth;
+  let height = viewer.scrollHeight - viewer.clientHeight;
+  viewer.scrollTo(width * percentX, height * percentY);
 }
 
 function readFileAsBlob(file){
