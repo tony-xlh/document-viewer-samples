@@ -216,7 +216,7 @@ function resizeImage(percent){
     let newWidth = (viewer.offsetWidth - padding()) * percent
     img.style.width = newWidth + "px";
     img.style.height = newWidth/ratio + "px";
-    keepScrollbarPosition(percentX,percentY);
+    //keepScrollbarPosition(percentX,percentY); //not stable
     resizing = false;
   },20)
 }
