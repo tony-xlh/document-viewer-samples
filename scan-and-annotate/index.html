@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scan and Annotate Documents</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" />
+  <style>
+    .scanner {
+      display: flex;
+    }
+
+    .options {
+      flex-basis: 30%;
+    }
+
+    .viewer {
+      flex-basis: 70%;
+    }
+    
+    .navbar {
+      display: flex;
+      align-items: center;
+      height: 50px;
+      background: black;
+      width: 100%;
+    }
+
+    body {
+      margin: 0;
+    }
+
+    .fullwidth {
+      width: 100%;
+    }
+
+    .title {
+      margin-left: 8px;
+      text-decoration: none;
+      color: white;
+      font-family: sans-serif;
+      font-size: larger;
+      text-transform: uppercase;
+    }
+
+    .options {
+      background: #F0EDE9;
+    }
+
+    .scanner {
+      height: calc(100vh - 50px);
+    }
+
+    .section {
+      padding: 8px;
+    }
+
+    .viewer .section {
+      height: calc(100% - 16px);
+    }
+
+    .options select {
+      width: 100%;
+      height: 30px;
+    }
+
+    .options div {
+      margin-bottom: 10px;
+    }
+
+    .d-primary-btn {
+      display: inline-block;
+      background-color: #fe8e14;
+      color: #fff;
+      text-align: center;
+      cursor: pointer;
+      transition: ease-in .2s all;
+      font-family: "sans-serif"
+    }
+
+    .d-primary-btn:hover {
+      box-shadow:-4px 4px #000;
+      transform: translate(4px,-4px)
+    }
+
+    .d-secondary-btn {
+      display: inline-block;
+      background-color: transparent;
+      color: #fe8e14;
+      text-align: center;
+      cursor: pointer;
+      font-family: "sans-serif"
+    }
+
+    .d-secondary-btn:hover {
+      color: #fea543;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      height: 40px;
+    }
+
+    .actions .d-primary-btn {
+      padding: 5px 10px;
+      margin-right: 5px;
+    }
+
+    #container {
+      height: calc(100% - 40px);
+    }
+
+    @media screen and (max-device-width: 600px){
+      .scanner {
+        flex-wrap: wrap;
+      }
+      .options {
+        flex-basis: 100%;
+      }
+      .viewer {
+        flex-basis: 100%;
+      }
+
+      .scanner {
+        height: auto;
+      }
+
+      #container {
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="title" href="#">Scan and Annotate</a>
+  </nav>
+  <div class="container">
+    <div class="scanner">
+      <div class="options">
+        <div class="section">
+          <div>
+            <label>
+              Scanner:
+              <select id="select-scanner"></select>
+            </label>
+          </div>
+          <div>
+            <label>
+              Resolution:
+              <select id="select-resolution">
+                <option value="100">100</option>
+                <option value="200">200</option>
+                <option value="300" selected>300</option>
+              </select>
+            </label>
+          </div>
+          <div>
+            <label>
+              Pixel Type:
+              <select id="select-pixeltype">
+                <option>Black & White</option>
+                <option>Gray</option>
+                <option selected>Color</option>
+              </select>
+            </label>
+          </div>
+          <div>
+            <input type="checkbox" id="showUI"/>
+            <label for="showUI">
+              Show Scanner UI
+            </label>
+          </div>
+          <div>
+            <input type="checkbox" id="useADF"/>
+            <label for="useADF">
+              Auto Document Feeder
+            </label>
+          </div>
+          <div>
+            <input type="checkbox" id="useDuplex"/>
+            <label for="useDuplex">
+              2-side Scan
+            </label>
+          </div>
+          <div>
+            <a onclick="scan();" class="d-primary-btn fullwidth" style="padding-top:5px;padding-bottom:5px;">Scan</a>
+            <a onclick="loadImages();" class="d-secondary-btn fullwidth" style="margin-top:5px;">Import Local Image</a>
+          </div>
+          <div style="margin-top:2em;">
+            Based on <a target="_blank" href="https://www.dynamsoft.com/">Dynamsoft SDKs</a>.
+          </div>
+        </div>
+      </div>
+      <div class="viewer">
+        <div class="section" >
+          <div id="container"></div>
+          <div class="actions">
+            <a class="d-primary-btn" onclick="save();">Save</a>
+            <label>
+              Output Format:
+              <select id="select-format">
+                <option>PDF</option>
+                <option>JPG</option>
+                <option>PNG</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript">
+    let DWObject;
+    let scanners = [];
+
+    function LoadDWT(){
+
+    }
+
+    function initDWT(){
+      Dynamsoft.DWT.AutoLoad = false;
+      Dynamsoft.DWT.Containers = [];
+      Dynamsoft.DWT.ResourcesPath = "https://unpkg.com/dwt@18.5.0/dist";
+      Dynamsoft.DWT.ProductKey = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="; //one-day trial 
+      Dynamsoft.DWT.CreateDWTObjectEx(
+        {
+          WebTwainId: 'dwtcontrol'
+        },
+        function(obj) {
+          DWObject = obj;
+          loadScanners();
+        },
+        function(err) {
+          console.log(err);
+        }
+      );
+    }
+
+    async function loadScanners(){
+      scanners = await DWObject.GetDevicesAsync();
+      console.log(scanners);
+      let selScanners = document.getElementById("select-scanner");
+      selScanners.innerHTML = "";
+      for (let index = 0; index < scanners.length; index++) {
+        const scanner = scanners[index];
+        let option = new Option(scanner.displayName,index);
+        selScanners.appendChild(option);
+      }
+    }
+
+    async function scan(){
+      const selectedIndex = document.getElementById("select-scanner").selectedIndex;
+      const options = {
+        IfShowUI:document.getElementById("showUI").checked,
+        PixelType:document.getElementById("select-pixeltype").selectedIndex,
+        Resolution:document.getElementById("select-resolution").selectedOptions[0].value,
+        IfFeederEnabled:document.getElementById("useADF").checked,
+        IfDuplexEnabled:document.getElementById("useDuplex").checked
+      };
+      console.log(options)
+      console.log(scanners[selectedIndex]);
+      await DWObject.SelectDeviceAsync(scanners[selectedIndex]);
+      await DWObject.OpenSourceAsync();
+      await DWObject.AcquireImageAsync(options);
+      await DWObject.CloseSourceAsync();
+    }
+
+    function removeDataURLHead(dataURL){
+      return dataURL.substring(dataURL.indexOf(",")+1,dataURL.length);
+    }
+  </script>
+</body>
+</html>
