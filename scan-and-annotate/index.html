@@ -284,15 +284,7 @@
         <div class="section" >
           <div id="container"></div>
           <div class="actions">
-            <a class="d-primary-btn" onclick="save();">Save</a>
-            <label>
-              Output Format:
-              <select id="select-format">
-                <option>PDF</option>
-                <option>JPG</option>
-                <option>PNG</option>
-              </select>
-            </label>
+            <a class="d-primary-btn" onclick="save();">Save as PDF</a>
           </div>
         </div>
       </div>
@@ -430,6 +422,23 @@
           }
         );
       })
+    }
+
+    async function save(){
+      showProgress("Saving...");
+      const blob = await doc.saveToPdf();
+      downloadBlob(blob);
+      hideProgress();
+    }
+
+    function downloadBlob(blob){
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob);
+      link.download = "scanned.pdf";
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(link.href);
     }
 
     async function filesSelected(){
