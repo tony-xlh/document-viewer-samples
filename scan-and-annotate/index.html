@@ -141,6 +141,10 @@
     }
 
     @media screen and (max-device-width: 600px){
+      .tabs-header {
+        display: none;
+      }
+
       .scanner {
         flex-wrap: wrap;
       }
@@ -254,8 +258,16 @@
     let scanners = [];
 
     document.getElementsByClassName("tabs-header")[0].addEventListener("click",function(e){
-      switchTab(e.target.dataset.tabName)
+      switchTab(e.target.dataset.tabName);
+      LoadDWTIfSwitched(e.target.dataset.tabName);
     })
+
+    async function LoadDWTIfSwitched(tabName){
+      if (tabName === "scanner" && !DWObject) {
+        await loadLibrary("https://unpkg.com/dwt@18.5.0/dist/dynamsoft.webtwain.min.js","text/javascript");
+        initDWT();
+      }
+    }
 
     function switchTab(tabName){
       if (tabName) {
@@ -276,10 +288,6 @@
           }
         });
       }
-    }
-
-    function LoadDWT(){
-
     }
 
     function initDWT(){
@@ -332,6 +340,31 @@
 
     function removeDataURLHead(dataURL){
       return dataURL.substring(dataURL.indexOf(",")+1,dataURL.length);
+    }
+
+    function loadLibrary(src,type,id,data){
+      return new Promise(function (resolve, reject) {
+        let scriptEle = document.createElement("script");
+        scriptEle.setAttribute("type", type);
+        scriptEle.setAttribute("src", src);
+        if (id) {
+          scriptEle.id = id;
+        }
+        if (data) {
+          for (let key in data) {
+            scriptEle.setAttribute(key, data[key]);
+          }
+        }
+        document.body.appendChild(scriptEle);
+        scriptEle.addEventListener("load", () => {
+          console.log(src+" loaded")
+          resolve(true);
+        });
+        scriptEle.addEventListener("error", (ev) => {
+          console.log("Error on loading "+src, ev);
+          reject(ev);
+        });
+      });
     }
   </script>
 </body>
