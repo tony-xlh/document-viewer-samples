@@ -406,6 +406,30 @@
       await DWObject.OpenSourceAsync();
       await DWObject.AcquireImageAsync(options);
       await DWObject.CloseSourceAsync();
+      LoadScannedDocumentsToDDV();
+    }
+
+    async function LoadScannedDocumentsToDDV(){
+      while (DWObject.HowManyImagesInBuffer > 0) {
+        const blob = await ConvertDocImageToBlob(0);
+        DWObject.RemoveImage(0);
+        await doc.loadSource(blob); 
+      }
+    }
+
+    function ConvertDocImageToBlob(index){
+      return new Promise((resolve, reject) => {
+        DWObject.ConvertToBlob(
+          [index],
+          Dynamsoft.DWT.EnumDWT_ImageType.IT_PNG,
+          function (result, indices, type) {
+            resolve(result);
+          },
+          function (errorCode, errorString) {
+            reject(errorString)
+          }
+        );
+      })
     }
 
     async function filesSelected(){
