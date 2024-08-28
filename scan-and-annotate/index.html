@@ -140,6 +140,35 @@
       display: block;
     }
 
+    .modal {
+      display: flex;
+      align-items: flex-start;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      min-width: 250px;
+      min-height: 150px;
+      border: 1px solid gray;
+      border-radius: 5px;
+      background: white;
+      z-index: 9999;
+      padding: 10px;
+      visibility: hidden;
+    }
+
+    .progress-modal {
+      align-items: center;
+      text-align: center;
+      justify-content: center;
+      min-height: 50px;
+      max-height: 100px;
+    }
+
+    .progress-modal.active {
+      visibility: inherit;
+    }
+
     @media screen and (max-device-width: 600px){
       .tabs-header {
         display: none;
@@ -178,7 +207,24 @@
               <div class="tabItem active" data-tab-name="camera">Camera</div>
               <div class="tabItem" data-tab-name="scanner">Scanner</div>
             </div>
-            <div class="tabContent active" data-tab-name="camera"></div>
+            <div class="tabContent active" data-tab-name="camera">
+              <div>
+                <label>
+                  Camera:
+                  <select id="select-camera"></select>
+                </label>
+              </div>
+              <div>
+                <label>
+                  Resolution:
+                  <select id="select-camera-resolution">
+                    <option value="1280x720">1280x720</option>
+                    <option value="1920x1080" selected>1920x1080</option>
+                    <option value="3840x2160">3840x2160</option>
+                  </select>
+                </label>
+              </div>
+            </div>
             <div class="tabContent" data-tab-name="scanner">
               <div>
                 <label>
@@ -251,10 +297,13 @@
       </div>
     </div>
   </div>
+  <div class="modal progress-modal"></div>
   <script type="text/javascript">
     let DWObject;
     let scanners = [];
-
+    let doc;
+    let browseViewer;
+    LoadDDV();
     document.getElementsByClassName("tabs-header")[0].addEventListener("click",function(e){
       switchTab(e.target.dataset.tabName);
       LoadDWTIfSwitched(e.target.dataset.tabName);
@@ -265,6 +314,28 @@
         await loadLibrary("https://unpkg.com/dwt@18.5.0/dist/dynamsoft.webtwain.min.js","text/javascript");
         initDWT();
       }
+    }
+
+    async function LoadDDV(){
+      showProgress("Loading Dynamsoft Document Viewer...");
+      await loadLibrary("https://cdn.jsdelivr.net/npm/dynamsoft-document-viewer@2.0.0/dist/ddv.js","text/javascript");
+      await loadStyle("https://cdn.jsdelivr.net/npm/dynamsoft-document-viewer@2.0.0/dist/ddv.css");
+      await initDDV();
+      hideProgress();
+    }
+
+    async function initDDV(){
+      Dynamsoft.DDV.Core.license = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMTAwMjI3NzYzLVRYbFhaV0pRY205cSIsIm1haW5TZXJ2ZXJVUkwiOiJodHRwczovL21sdHMuZHluYW1zb2Z0LmNvbSIsIm9yZ2FuaXphdGlvbklEIjoiMTAwMjI3NzYzIiwic3RhbmRieVNlcnZlclVSTCI6Imh0dHBzOi8vc2x0cy5keW5hbXNvZnQuY29tIiwiY2hlY2tDb2RlIjotMzg1NjA5MTcyfQ==";
+  
+      Dynamsoft.DDV.Core.engineResourcePath = "https://cdn.jsdelivr.net/npm/dynamsoft-document-viewer@2.0.0/dist/engine";// Lead to a folder containing the distributed WASM files
+      await Dynamsoft.DDV.Core.init();
+      Dynamsoft.DDV.setProcessingHandler("imageFilter", new Dynamsoft.DDV.ImageFilter());
+      browseViewer = new Dynamsoft.DDV.BrowseViewer({
+        container: document.getElementById("container"),
+      });
+      const docManager = Dynamsoft.DDV.documentManager;
+      doc = docManager.createDocument();
+      browseViewer.openDocument(doc.uid);
     }
 
     function switchTab(tabName){
@@ -363,6 +434,34 @@
           reject(ev);
         });
       });
+    }
+
+    function loadStyle(url) {
+      return new Promise(function (resolve, reject) {
+        let linkEle = document.createElement('link')
+        linkEle.type = 'text/css'
+        linkEle.rel = 'stylesheet'
+        linkEle.href = url
+        let head = document.getElementsByTagName('head')[0]
+        head.appendChild(linkEle)
+        linkEle.addEventListener("load", () => {
+          console.log(url+" loaded")
+          resolve(true);
+        });
+        linkEle.addEventListener("error", (ev) => {
+          console.log("Error on loading "+url, ev);
+          reject(ev);
+        });
+      });
+    }
+
+    function showProgress(info){
+      document.getElementsByClassName("progress-modal")[0].classList.add("active");
+      document.getElementsByClassName("progress-modal")[0].innerText = info;
+    }
+
+    function hideProgress(){
+      document.getElementsByClassName("progress-modal")[0].classList.remove("active");
     }
   </script>
 </body>
