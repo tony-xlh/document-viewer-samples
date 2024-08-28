@@ -294,22 +294,29 @@
   <script type="text/javascript">
     let DWObject;
     let scanners = [];
+    let cameras = [];
     let doc;
     let browseViewer;
-    LoadDDV();
+    initCamScanner();
+    loadDDV();
     document.getElementsByClassName("tabs-header")[0].addEventListener("click",function(e){
       switchTab(e.target.dataset.tabName);
-      LoadDWTIfSwitched(e.target.dataset.tabName);
+      loadDWTIfSwitched(e.target.dataset.tabName);
     })
 
-    async function LoadDWTIfSwitched(tabName){
+    async function initCamScanner(){
+      await requestCameraPermission();
+      listCameras();
+    }
+
+    async function loadDWTIfSwitched(tabName){
       if (tabName === "scanner" && !DWObject) {
         await loadLibrary("https://unpkg.com/dwt@18.5.0/dist/dynamsoft.webtwain.min.js","text/javascript");
         initDWT();
       }
     }
 
-    async function LoadDDV(){
+    async function loadDDV(){
       showProgress("Loading Dynamsoft Document Viewer...");
       await loadLibrary("https://cdn.jsdelivr.net/npm/dynamsoft-document-viewer@2.0.0/dist/ddv.js","text/javascript");
       await loadStyle("https://cdn.jsdelivr.net/npm/dynamsoft-document-viewer@2.0.0/dist/ddv.css");
@@ -527,6 +534,39 @@
 
     function hideProgress(){
       document.getElementsByClassName("progress-modal")[0].classList.remove("active");
+    }
+
+    async function listCameras(){
+      let cameraSelect = document.getElementById("select-camera");
+      let allDevices = await navigator.mediaDevices.enumerateDevices();
+      for (let i = 0; i < allDevices.length; i++){
+        let device = allDevices[i];
+        if (device.kind == 'videoinput'){
+          cameras.push(device);
+          cameraSelect.appendChild(new Option(device.label,device.deviceId));
+        }
+      }
+    }
+
+    async function requestCameraPermission() {
+      try {
+        const constraints = {video: true, audio: false};
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        closeStream(stream);
+      } catch (error) {
+        console.log(error);
+        throw error;
+      }
+    }
+
+    function closeStream(stream){
+      if (stream) {
+        const tracks = stream.getTracks();
+        for (let i=0;i<tracks.length;i++) {
+          const track = tracks[i];
+          track.stop();  // stop the opened tracks
+        }
+      }
     }
   </script>
 </body>
