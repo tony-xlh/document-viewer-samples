@@ -2,6 +2,12 @@
 
 Demos for document viewer
 
+## Scan and Annotate
+
+Scan documents via document scanners or cameras and then add annotations.
+
+[Online demo](https://tony-xlh.github.io/document-viewer-samples/scan-and-annotate/index.html)
+
 ## Multiple Image Selection
 
 * [Browse Viewer](https://tony-xlh.github.io/document-viewer-samples/multiple-image-selection/browse-viewer.html). Multiple selection demo using [Dynamsoft Document Viewer's Browse Viewer](https://www.dynamsoft.com/document-viewer/docs/introduction/index.html).
