@@ -297,6 +297,7 @@
         <div class="section" >
           <div id="container"></div>
           <div class="actions">
+            <a class="d-primary-btn" onclick="annotate();">Annotate</a>
             <a class="d-primary-btn" onclick="save();">Save as PDF</a>
           </div>
         </div>
@@ -363,22 +364,22 @@
         captureViewer.hide();
         hideFullscreenContainer();
       });
+    }
 
-      // Define a function to control the viewers' visibility
-      const switchViewer = (c,p,e) => {
-        captureViewer.hide();
-        perspectiveViewer.hide();
-        editViewer.hide();
+    // Define a function to control the viewers' visibility
+    function switchViewer (c,p,e) {
+      captureViewer.hide();
+      perspectiveViewer.hide();
+      editViewer.hide();
 
-        if(c) {
-          captureViewer.show();
-        } else {
-          captureViewer.stop();
-        }
-              
-        if(p) perspectiveViewer.show();
-        if(e) editViewer.show();
-      };
+      if(c) {
+        captureViewer.show();
+      } else {
+        captureViewer.stop();
+      }
+            
+      if(p) perspectiveViewer.show();
+      if(e) editViewer.show();
     }
 
     function initCaptureViewer(){
@@ -680,6 +681,11 @@
           }
         );
       })
+    }
+
+    function annotate(){
+      switchViewer(0,0,1);
+      showFullscreenContainer();
     }
 
     async function save(){
