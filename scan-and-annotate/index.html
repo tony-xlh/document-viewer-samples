@@ -57,12 +57,12 @@
       height: calc(100% - 16px);
     }
 
-    .tabContent select {
+    .tab-content select {
       width: 100%;
       height: 30px;
     }
 
-    .tabContent div {
+    .tab-content div {
       margin-bottom: 10px;
     }
 
@@ -110,20 +110,33 @@
       height: calc(100% - 40px);
     }
 
+    #fullscreenContainer {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      visibility: hidden;
+    }
+
+    #fullscreenContainer.active {
+      visibility: visible;
+    }
+
     .tabs-header {
       display: flex;
       border-bottom: 1px solid gray;
       margin-bottom: 10px;
     }
 
-    .tabItem {
+    .tab-item {
       padding: 10px 5px;
       margin-bottom: 0;
       margin-right: 10px;
       border: 1px solid transparent;
     }
 
-    .tabItem.active {
+    .tab-item.active {
       margin-bottom: -1px;
       border: 1px solid gray;
       border-top-left-radius: .25rem;
@@ -132,11 +145,11 @@
       border-bottom: 1px solid #F0EDE9;
     }
 
-    .tabContent {
+    .tab-content {
       display: none;
     }
 
-    .tabContent.active {
+    .tab-content.active {
       display: block;
     }
 
@@ -204,10 +217,10 @@
         <div class="section">
           <div class="tabs">
             <div class="tabs-header">
-              <div class="tabItem active" data-tab-name="camera">Camera</div>
-              <div class="tabItem" data-tab-name="scanner">Scanner</div>
+              <div class="tab-item active" data-tab-name="camera">Camera</div>
+              <div class="tab-item" data-tab-name="scanner">Scanner</div>
             </div>
-            <div class="tabContent active" data-tab-name="camera">
+            <div class="tab-content active" data-tab-name="camera">
               <div>
                 <label>
                   Camera:
@@ -225,7 +238,7 @@
                 </label>
               </div>
             </div>
-            <div class="tabContent" data-tab-name="scanner">
+            <div class="tab-content" data-tab-name="scanner">
               <div>
                 <label>
                   Scanner:
@@ -290,6 +303,7 @@
       </div>
     </div>
   </div>
+  <div id="fullscreenContainer"></div>
   <div class="modal progress-modal"></div>
   <script type="text/javascript">
     let DWObject;
@@ -297,16 +311,238 @@
     let cameras = [];
     let doc;
     let browseViewer;
-    initCamScanner();
-    loadDDV();
+    let editViewer;
+    let captureViewer;
+    let perspectiveViewer;
+    
+    init();
+
     document.getElementsByClassName("tabs-header")[0].addEventListener("click",function(e){
       switchTab(e.target.dataset.tabName);
       loadDWTIfSwitched(e.target.dataset.tabName);
     })
 
+    async function init(){
+      await loadDDV();
+      await initCamScanner();
+    }
+
     async function initCamScanner(){
       await requestCameraPermission();
       listCameras();
+      initCaptureViewer();
+      initPerspectiveViewer();
+      initEditViewer();
+      registerEventsForViewers();
+    }
+
+    function registerEventsForViewers(){
+      // Register an event in `captureViewer` to show the perspective viewer
+      captureViewer.on("showPerspectiveViewer",() => {
+        switchViewer(0,1,0);
+      });
+            
+      // Register an event in `perspectiveViewer` to go back the capture viewer
+      perspectiveViewer.on("backToCaptureViewer",() => {
+        switchViewer(1,0,0);
+        captureViewer.play().catch(err => {alert(err.message)});
+      });
+
+      // Register an event in `perspectiveViewer` to show the edit viewer
+      perspectiveViewer.on("showEditViewer",() => {
+        switchViewer(0,0,1)
+      });
+            
+      // Register an event in `editViewer` to go back the perspective viewer
+      editViewer.on("backToPerspectiveViewer",() => {
+        switchViewer(0,1,0);
+      });
+
+      editViewer.on("close",() => {
+        switchViewer(1,0,0);
+        captureViewer.hide();
+        hideFullscreenContainer();
+      });
+
+      // Define a function to control the viewers' visibility
+      const switchViewer = (c,p,e) => {
+        captureViewer.hide();
+        perspectiveViewer.hide();
+        editViewer.hide();
+
+        if(c) {
+          captureViewer.show();
+        } else {
+          captureViewer.stop();
+        }
+              
+        if(p) perspectiveViewer.show();
+        if(e) editViewer.show();
+      };
+    }
+
+    function initCaptureViewer(){
+      const captureViewerUiConfig = {
+        type: Dynamsoft.DDV.Elements.Layout,
+        flexDirection: "column",
+        children: [
+            {
+                type: Dynamsoft.DDV.Elements.Layout,
+                className: "ddv-capture-viewer-header-mobile",
+                children: [
+                    {
+                        type: "CameraResolution",
+                        className: "ddv-capture-viewer-resolution",
+                    },
+                    Dynamsoft.DDV.Elements.Flashlight,
+                ],
+            },
+            Dynamsoft.DDV.Elements.MainView,
+            {
+                type: Dynamsoft.DDV.Elements.Layout,
+                className: "ddv-capture-viewer-footer-mobile",
+                children: [
+                    Dynamsoft.DDV.Elements.AutoDetect,
+                    Dynamsoft.DDV.Elements.AutoCapture,
+                    {
+                        type: "Capture",
+                        className: "ddv-capture-viewer-captureButton",
+                    },
+                    {
+                        // Bind click event to "ImagePreview" element
+                        // The event will be registered later.
+                        type: Dynamsoft.DDV.Elements.ImagePreview,
+                        events:{ 
+                            click: "showPerspectiveViewer"
+                        }
+                    },
+                    Dynamsoft.DDV.Elements.CameraConvert,
+                ],
+            },
+        ],
+      };
+      captureViewer = new Dynamsoft.DDV.CaptureViewer({
+        container: "fullscreenContainer",
+        uiConfig: captureViewerUiConfig,
+        viewerConfig: {
+          acceptedPolygonConfidence: 60,
+          enableAutoDetect: false,
+        }
+      });
+      captureViewer.hide();
+      captureViewer.openDocument(doc.uid);
+    }
+
+    function initPerspectiveViewer(){
+      const perspectiveUiConfig = {
+          type: Dynamsoft.DDV.Elements.Layout,
+          flexDirection: "column",
+          children: [
+              {
+                  type: Dynamsoft.DDV.Elements.Layout,
+                  className: "ddv-perspective-viewer-header-mobile",
+                  children: [
+                      {
+                          // Add a "Back" button in perspective viewer's header and bind the event to go back to capture viewer.
+                          // The event will be registered later.
+                          type: Dynamsoft.DDV.Elements.Button,
+                          className: "ddv-button-back",
+                          events:{
+                              click: "backToCaptureViewer"
+                          }
+                      },
+                      Dynamsoft.DDV.Elements.Pagination,
+                      {   
+                          // Bind event for "PerspectiveAll" button to show the edit viewer
+                          // The event will be registered later.
+                          type: Dynamsoft.DDV.Elements.PerspectiveAll,
+                          events:{
+                              click: "showEditViewer"
+                          }
+                      },
+                  ],
+              },
+              Dynamsoft.DDV.Elements.MainView,
+              {
+                  type: Dynamsoft.DDV.Elements.Layout,
+                  className: "ddv-perspective-viewer-footer-mobile",
+                  children: [
+                      Dynamsoft.DDV.Elements.FullQuad,
+                      Dynamsoft.DDV.Elements.RotateLeft,
+                      Dynamsoft.DDV.Elements.RotateRight,
+                      Dynamsoft.DDV.Elements.DeleteCurrent,
+                      Dynamsoft.DDV.Elements.DeleteAll,
+                  ],
+              },
+          ],
+      };
+            
+      // Create a perspective viewer
+      perspectiveViewer = new Dynamsoft.DDV.PerspectiveViewer({
+          container: "fullscreenContainer",
+          groupUid: captureViewer.groupUid,
+          uiConfig: perspectiveUiConfig,
+          viewerConfig: {
+              scrollToLatest: true,
+          }
+      });
+
+      perspectiveViewer.hide();
+    }
+
+    function initEditViewer(){
+      const editViewerUiConfig = {
+          type: Dynamsoft.DDV.Elements.Layout,
+          flexDirection: "column",
+          className: "ddv-edit-viewer-mobile",
+          children: [
+              {
+                  type: Dynamsoft.DDV.Elements.Layout,
+                  className: "ddv-edit-viewer-header-mobile",
+                  children: [
+                      {
+                          // Add a "Back" buttom to header and bind click event to go back to the perspective viewer
+                          // The event will be registered later.
+                          type: Dynamsoft.DDV.Elements.Button,
+                          className: "ddv-button-back",
+                          events:{
+                              click: "backToPerspectiveViewer"
+                          }
+                      },
+                      Dynamsoft.DDV.Elements.Pagination,
+                      {
+                          type: Dynamsoft.DDV.Elements.Button,
+                          className: "ddv-button-done",
+                          events:{
+                              click: "close"
+                          }
+                      }
+                  ],
+              },
+              Dynamsoft.DDV.Elements.MainView,
+              {
+                  type: Dynamsoft.DDV.Elements.Layout,
+                  className: "ddv-edit-viewer-footer-mobile",
+                  children: [
+                      Dynamsoft.DDV.Elements.DisplayMode,
+                      Dynamsoft.DDV.Elements.RotateLeft,
+                      Dynamsoft.DDV.Elements.Crop,
+                      Dynamsoft.DDV.Elements.Filter,
+                      Dynamsoft.DDV.Elements.Undo,
+                      Dynamsoft.DDV.Elements.Delete,
+                      Dynamsoft.DDV.Elements.Load,
+                  ],
+              },
+          ],
+      };
+      // Create an edit viewer
+      editViewer = new Dynamsoft.DDV.EditViewer({
+          container: "fullscreenContainer",
+          groupUid: captureViewer.groupUid,
+          uiConfig: editViewerUiConfig
+      });
+
+      editViewer.hide();
     }
 
     async function loadDWTIfSwitched(tabName){
@@ -340,7 +576,7 @@
 
     function switchTab(tabName){
       if (tabName) {
-        document.querySelectorAll(".tabItem").forEach(element => {
+        document.querySelectorAll(".tab-item").forEach(element => {
           console.log(element);
           console.log(element.dataset.tabName);
           if (element.dataset.tabName === tabName) {
@@ -349,7 +585,7 @@
             element.classList.remove("active")
           }
         });
-        document.querySelectorAll(".tabContent").forEach(element => {
+        document.querySelectorAll(".tab-content").forEach(element => {
           if (element.dataset.tabName === tabName) {
             element.classList.add("active");
           }else{
@@ -391,21 +627,36 @@
     }
 
     async function scan(){
-      const selectedIndex = document.getElementById("select-scanner").selectedIndex;
-      const options = {
-        IfShowUI:document.getElementById("showUI").checked,
-        PixelType:document.getElementById("select-pixeltype").selectedIndex,
-        Resolution:document.getElementById("select-resolution").selectedOptions[0].value,
-        IfFeederEnabled:document.getElementById("useADF").checked,
-        IfDuplexEnabled:document.getElementById("useDuplex").checked
-      };
-      console.log(options)
-      console.log(scanners[selectedIndex]);
-      await DWObject.SelectDeviceAsync(scanners[selectedIndex]);
-      await DWObject.OpenSourceAsync();
-      await DWObject.AcquireImageAsync(options);
-      await DWObject.CloseSourceAsync();
-      LoadScannedDocumentsToDDV();
+      if (document.querySelector(".tab-item.active").dataset.tabName === "scanner") {
+        const selectedIndex = document.getElementById("select-scanner").selectedIndex;
+        const options = {
+          IfShowUI:document.getElementById("showUI").checked,
+          PixelType:document.getElementById("select-pixeltype").selectedIndex,
+          Resolution:document.getElementById("select-resolution").selectedOptions[0].value,
+          IfFeederEnabled:document.getElementById("useADF").checked,
+          IfDuplexEnabled:document.getElementById("useDuplex").checked
+        };
+        console.log(options)
+        console.log(scanners[selectedIndex]);
+        await DWObject.SelectDeviceAsync(scanners[selectedIndex]);
+        await DWObject.OpenSourceAsync();
+        await DWObject.AcquireImageAsync(options);
+        await DWObject.CloseSourceAsync();
+        LoadScannedDocumentsToDDV();
+      }else{
+        let selectedCamera = cameras[document.getElementById("select-camera").selectedIndex];
+        await captureViewer.selectCamera(selectedCamera.deviceId);
+        let selectedResolution = document.getElementById("select-camera-resolution").selectedOptions[0].value;
+        let width = parseInt(selectedResolution.split("x")[0]);
+        let height = parseInt(selectedResolution.split("x")[1]);
+        showFullscreenContainer();
+        captureViewer.show();
+        captureViewer.play({
+          resolution: [width,height],
+        }).catch(err => {
+          alert(err.message)
+        });
+      }
     }
 
     async function LoadScannedDocumentsToDDV(){
@@ -534,6 +785,14 @@
 
     function hideProgress(){
       document.getElementsByClassName("progress-modal")[0].classList.remove("active");
+    }
+
+    function hideFullscreenContainer(){
+      document.getElementById("fullscreenContainer").classList.remove("active");
+    }
+
+    function showFullscreenContainer(){
+      document.getElementById("fullscreenContainer").classList.add("active");
     }
 
     async function listCameras(){
