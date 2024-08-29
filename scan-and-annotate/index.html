@@ -715,7 +715,18 @@
         for (let index = 0; index < files.length; index++) {
           const file = files[index];
           const blob = await readFileAsBlob(file);
-          await doc.loadSource(blob); // load image
+          if (file.type === "application/pdf") {
+            let pdfSource = {
+              fileData:blob,
+              renderOptions:{
+                renderAnnotations:Dynamsoft.DDV.EnumAnnotationRenderMode.LOAD_ANNOTATIONS
+              }
+            }
+            await doc.loadSource(pdfSource); // load pdf
+          }else{
+            await doc.loadSource(blob); // load image
+          }
+          
         }    
       }
     }
