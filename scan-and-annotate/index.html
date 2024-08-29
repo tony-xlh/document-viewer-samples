@@ -509,7 +509,7 @@
       perspectiveViewer.hide();
     }
 
-    function initEditViewer(){
+    function getEditViewerUIConfig(hideBack){
       const editViewerUiConfig = {
           type: Dynamsoft.DDV.Elements.Layout,
           flexDirection: "column",
@@ -554,13 +554,19 @@
               },
           ],
       };
+      if (hideBack) {
+        editViewerUiConfig.children[0].children.splice(0,1);
+      }
+      return editViewerUiConfig;
+    }
+
+    function initEditViewer(){
       // Create an edit viewer
       editViewer = new Dynamsoft.DDV.EditViewer({
           container: "fullscreenContainer",
           groupUid: captureViewer.groupUid,
-          uiConfig: editViewerUiConfig
+          uiConfig: getEditViewerUIConfig()
       });
-
       editViewer.hide();
     }
 
@@ -663,6 +669,7 @@
         await DWObject.CloseSourceAsync();
         LoadScannedDocumentsToDDV();
       }else{
+        editViewer.updateUiConfig(getEditViewerUIConfig(false));
         let selectedCamera = cameras[document.getElementById("select-camera").selectedIndex];
         await captureViewer.selectCamera(selectedCamera.deviceId);
         let selectedResolution = document.getElementById("select-camera-resolution").selectedOptions[0].value;
@@ -702,6 +709,7 @@
     }
 
     function annotate(){
+      editViewer.updateUiConfig(getEditViewerUIConfig(true));
       switchViewer(0,0,1);
       showFullscreenContainer();
     }
