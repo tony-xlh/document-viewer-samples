@@ -632,6 +632,9 @@
       const docManager = Dynamsoft.DDV.documentManager;
       doc = docManager.createDocument();
       browseViewer.openDocument(doc.uid);
+      if (screen.width < 600) {
+        browseViewer.setRowAndColumn(1,1);
+      }
     }
 
     function switchTab(tabName){
