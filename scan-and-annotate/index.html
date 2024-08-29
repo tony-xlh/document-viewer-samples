@@ -182,6 +182,18 @@
       visibility: inherit;
     }
 
+    .input-modal {
+      min-height: auto;
+    }
+
+    .input-modal.active {
+      visibility: inherit;
+    }
+
+    .input-modal input {
+      width: calc(100% - 10px);
+    }
+
     @media screen and (max-device-width: 600px){
       .tabs-header {
         display: none;
@@ -312,6 +324,21 @@
   </div>
   <div id="fullscreenContainer"></div>
   <div class="modal progress-modal"></div>
+  <div class="modal input-modal">
+    <div>
+      <div>
+        Please input your licenses (<a href="https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform" target="_blank">apply</a> or use the one-day trial):
+      </div>
+      <br/>
+      <label>
+        License:
+      </label>
+      <br/>
+      <input type="text" id="license"/>
+      <br/>
+      <button id="saveLicenseBtn" onclick="saveLicense();">Save</button>
+    </div>
+  </div>
   <script type="text/javascript">
     let DWObject;
     let router;
@@ -322,8 +349,10 @@
     let editViewer;
     let captureViewer;
     let perspectiveViewer;
+    let license = "";
+    let oneDayTrial = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==";
     
-    init();
+    showInputModal();
 
     document.getElementsByClassName("tabs-header")[0].addEventListener("click",function(e){
       switchTab(e.target.dataset.tabName);
@@ -593,8 +622,7 @@
     }
 
     async function initDDV(){
-      Dynamsoft.DDV.Core.license = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMTAwMjI3NzYzLVRYbFhaV0pRY205cSIsIm1haW5TZXJ2ZXJVUkwiOiJodHRwczovL21sdHMuZHluYW1zb2Z0LmNvbSIsIm9yZ2FuaXphdGlvbklEIjoiMTAwMjI3NzYzIiwic3RhbmRieVNlcnZlclVSTCI6Imh0dHBzOi8vc2x0cy5keW5hbXNvZnQuY29tIiwiY2hlY2tDb2RlIjotMzg1NjA5MTcyfQ==";
-  
+      Dynamsoft.DDV.Core.license = license;
       Dynamsoft.DDV.Core.engineResourcePath = "https://cdn.jsdelivr.net/npm/dynamsoft-document-viewer@2.0.0/dist/engine";// Lead to a folder containing the distributed WASM files
       await Dynamsoft.DDV.Core.init();
       Dynamsoft.DDV.setProcessingHandler("imageFilter", new Dynamsoft.DDV.ImageFilter());
@@ -631,7 +659,7 @@
       Dynamsoft.DWT.AutoLoad = false;
       Dynamsoft.DWT.Containers = [];
       Dynamsoft.DWT.ResourcesPath = "https://unpkg.com/dwt@18.5.0/dist";
-      Dynamsoft.DWT.ProductKey = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="; //one-day trial 
+      Dynamsoft.DWT.ProductKey = license;
       Dynamsoft.DWT.CreateDWTObjectEx(
         {
           WebTwainId: 'dwtcontrol'
@@ -907,7 +935,7 @@
     async function initDDN(){
       Dynamsoft.Core.CoreModule.loadWasm(["DDN"]);
       await Dynamsoft.License.LicenseManager.initLicense(
-        "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==",
+        license,
         true
       );
       router = await Dynamsoft.CVR.CaptureVisionRouter.createInstance();
@@ -1026,6 +1054,33 @@
         }
       }
       DDV.setProcessingHandler('documentBoundariesDetect', new DDNNormalizeHandler())
+    }
+
+    function saveLicense(){
+      let inputLicense = document.getElementById("license").value;
+      if (!inputLicense) {
+        license = oneDayTrial;
+      }else{
+        license = inputLicense;
+      }
+      localStorage.setItem("license",license);
+      hideInputModal();
+      init();
+    }
+
+    function showInputModal(){
+      let storedLicense = localStorage.getItem("license");
+      if (!storedLicense) {
+        license = oneDayTrial;
+      }else{
+        license = storedLicense;
+      }
+      document.getElementById("license").value = license;
+      document.getElementsByClassName("input-modal")[0].classList.add("active");
+    }
+
+    function hideInputModal(){
+      document.getElementsByClassName("input-modal")[0].classList.remove("active");
     }
   </script>
 </body>
