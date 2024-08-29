@@ -690,7 +690,10 @@
 
     async function save(){
       showProgress("Saving...");
-      const blob = await doc.saveToPdf();
+      const pdfSettings = {
+        saveAnnotation: "annotation"
+      };
+      const blob = await doc.saveToPdf(pdfSettings);
       downloadBlob(blob);
       hideProgress();
     }
