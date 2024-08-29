@@ -342,6 +342,12 @@
       captureViewer.on("showPerspectiveViewer",() => {
         switchViewer(0,1,0);
       });
+
+      captureViewer.on("close",() => {
+        captureViewer.stop();
+        closeViewers();
+      });
+      
             
       // Register an event in `perspectiveViewer` to go back the capture viewer
       perspectiveViewer.on("backToCaptureViewer",() => {
@@ -360,10 +366,14 @@
       });
 
       editViewer.on("close",() => {
-        switchViewer(1,0,0);
-        captureViewer.hide();
-        hideFullscreenContainer();
+        closeViewers();
       });
+    }
+
+    function closeViewers(){
+      switchViewer(1,0,0);
+      captureViewer.hide();
+      hideFullscreenContainer();
     }
 
     // Define a function to control the viewers' visibility
@@ -396,6 +406,14 @@
                         className: "ddv-capture-viewer-resolution",
                     },
                     Dynamsoft.DDV.Elements.Flashlight,
+                    {
+                        // Bind click event to "ImagePreview" element
+                        // The event will be registered later.
+                        type: Dynamsoft.DDV.Elements.Close,
+                        events:{ 
+                            click: "close"
+                        }
+                    },
                 ],
             },
             Dynamsoft.DDV.Elements.MainView,
@@ -726,8 +744,7 @@
           }else{
             await doc.loadSource(blob); // load image
           }
-          
-        }    
+        }  
       }
     }
 
