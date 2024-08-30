@@ -2,9 +2,9 @@
 
 This is an integrated demo for Dynamsoft's SDKs:
 
-* Dynamic Web TWAIN. Scan documents via document scanners.
-* Dynamsoft Document Viewer. View scanned document images, add annotations and save them as PDF or image files.
-* Dynamsoft Document Normalizer. Detect the document boundaries.
+* [Dynamic Web TWAIN](https://www.dynamsoft.com/web-twain/overview/). Scan documents via document scanners.
+* [Dynamsoft Document Viewer](https://www.dynamsoft.com/document-viewer/docs/introduction/index.html). View scanned document images, add annotations and save them as PDF or image files.
+* [Dynamsoft Document Normalizer](https://www.dynamsoft.com/document-normalizer/overview/). Detect the document boundaries.
 
 [Online demo](https://tony-xlh.github.io/document-viewer-samples/scan-and-annotate/index.html)
 
