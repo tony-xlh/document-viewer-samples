@@ -588,7 +588,7 @@
       perspectiveViewer.hide();
     }
 
-    function getEditViewerUIConfig(hideBack){
+    function initEditViewer(){
       const editViewerUiConfig = {
           type: Dynamsoft.DDV.Elements.Layout,
           flexDirection: "column",
@@ -633,19 +633,15 @@
               },
           ],
       };
-      if (hideBack) {
-        editViewerUiConfig.children[0].children.splice(0,1);
-      }
-      return editViewerUiConfig;
-    }
 
-    function initEditViewer(){
       // Create an edit viewer
       editViewer = new Dynamsoft.DDV.EditViewer({
           container: "fullscreenContainer",
           groupUid: captureViewer.groupUid,
-          uiConfig: getEditViewerUIConfig()
+          uiConfig: editViewerUiConfig
       });
+      // Configure image filter feature which is in edit viewer
+      Dynamsoft.DDV.setProcessingHandler("imageFilter", new Dynamsoft.DDV.ImageFilter());
       editViewer.hide();
     }
 
@@ -762,7 +758,7 @@
         await DWObject.CloseSourceAsync();
         LoadScannedDocumentsToDDV();
       }else{
-        editViewer.updateUiConfig(getEditViewerUIConfig(false));
+        toggleBackButtonInEditViewer(true);
         let selectedCamera = cameras[document.getElementById("select-camera").selectedIndex];
         await captureViewer.selectCamera(selectedCamera.deviceId);
         let selectedResolution = document.getElementById("select-camera-resolution").selectedOptions[0].value;
@@ -775,6 +771,14 @@
         }).catch(err => {
           alert(err.message)
         });
+      }
+    }
+
+    function toggleBackButtonInEditViewer(show){
+      if (show) {
+        document.querySelector(".ddv-edit-viewer-header-mobile .ddv-button-back").style.visibility = "inherit";
+      }else{
+        document.querySelector(".ddv-edit-viewer-header-mobile .ddv-button-back").style.visibility = "hidden";
       }
     }
 
@@ -802,7 +806,7 @@
     }
 
     function annotate(){
-      editViewer.updateUiConfig(getEditViewerUIConfig(true));
+      toggleBackButtonInEditViewer(false);
       switchViewer(0,0,1);
       showFullscreenContainer();
     }
