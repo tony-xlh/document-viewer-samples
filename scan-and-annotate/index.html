@@ -638,7 +638,7 @@
       }
       document.getElementsByClassName("ddv-canvas-container")[0].addEventListener("touchstart",function(e) {
         touchedPoint = e.touches[0];
-      })
+      }, true);
       document.getElementsByClassName("ddv-canvas-container")[0].addEventListener("touchmove",function(e) {
         let scrollTop = document.getElementsByClassName("ddv-scroll-container")[0].scrollTop;
         let scrollEnd = document.getElementsByClassName("ddv-scroll-container")[0].scrollTop+document.getElementsByClassName("ddv-scroll-container")[0].clientHeight;
@@ -647,7 +647,7 @@
         if (offset >= 0 || scrollTop === 0) { //reach bottom or top
           window.scrollBy(0,offsetY);
         }
-      })
+      }, true);
     }
 
     function switchTab(tabName){
