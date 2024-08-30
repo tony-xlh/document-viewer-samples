@@ -26,6 +26,7 @@
 
     body {
       margin: 0;
+      padding: 0;
     }
 
     .fullwidth {
@@ -73,12 +74,8 @@
       text-align: center;
       cursor: pointer;
       transition: ease-in .2s all;
-      font-family: "sans-serif"
-    }
-
-    .d-primary-btn:hover {
-      box-shadow:-4px 4px #000;
-      transform: translate(4px,-4px)
+      font-family: "sans-serif";
+      white-space: nowrap;
     }
 
     .d-secondary-btn {
@@ -90,8 +87,14 @@
       font-family: "sans-serif"
     }
 
-    .d-secondary-btn:hover {
-      color: #fea543;
+    @media(any-hover:hover){
+      .d-primary-btn:hover {
+        box-shadow: -4px 4px 0 0 #000;
+        transform: translate(4px,-4px);
+      }
+      .d-secondary-btn:hover {
+        color: #fea543;
+      }
     }
 
     .actions {
@@ -99,6 +102,8 @@
       justify-content: flex-start;
       align-items: center;
       height: 40px;
+      overflow-x: auto;
+      max-width: 100%;
     }
 
     .actions .d-primary-btn {
@@ -117,6 +122,7 @@
       width: 100%;
       height: 100%;
       visibility: hidden;
+      overflow: hidden;
     }
 
     #fullscreenContainer.active {
@@ -190,6 +196,10 @@
       visibility: inherit;
     }
 
+    .redact-modal.active {
+      visibility: inherit;
+    }
+
     .input-modal input {
       width: calc(100% - 10px);
     }
@@ -202,15 +212,22 @@
       .scanner {
         flex-wrap: wrap;
       }
+
       .options {
         flex-basis: 100%;
       }
+
       .viewer {
         flex-basis: 100%;
       }
 
       .scanner {
         height: auto;
+      }
+
+      .actions {
+        height: auto;
+        flex-wrap: wrap;
       }
 
       #container {
@@ -316,7 +333,16 @@
           <div id="container"></div>
           <div class="actions">
             <a class="d-primary-btn" onclick="annotate();">Annotate</a>
+            <a class="d-primary-btn" onclick="showRedactModal();">Redact</a>
             <a class="d-primary-btn" onclick="save();">Save as PDF</a>
+            <label>
+              Output type:
+              <select id="outputTypeSelect">
+                <option value="annotation" selected>Keep Annotations</option>
+                <option value="flatten">Flatten</option>
+                <option value="image">Save annotations as images</option>
+              </select>
+            </label>
           </div>
         </div>
       </div>
@@ -339,6 +365,22 @@
       <button id="saveLicenseBtn" onclick="saveLicense();">Save</button>
     </div>
   </div>
+  <div class="modal redact-modal">
+    <div>
+      <div>
+        Please input the words to redact for the current image:
+      </div>
+      <br/>
+      <label>
+        Words:
+      </label>
+      <br/>
+      <input type="text" id="words"/>
+      <br/>
+      <button id="redactBtn" onclick="redact();">Redact</button>
+      <button onclick="hideRedactModal();">Cancel</button>
+    </div>
+  </div>
   <script type="text/javascript">
     let DWObject;
     let router;
@@ -350,8 +392,9 @@
     let captureViewer;
     let perspectiveViewer;
     let license = "";
+    let touchedPoint;
     let oneDayTrial = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==";
-    
+    let tessWorker;
     showInputModal();
 
     document.getElementsByClassName("tabs-header")[0].addEventListener("click",function(e){
@@ -635,6 +678,18 @@
       if (screen.width < 600) {
         browseViewer.setRowAndColumn(1,1);
       }
+      document.getElementsByClassName("ddv-canvas-container")[0].addEventListener("touchstart",function(e) {
+        touchedPoint = e.touches[0];
+      }, true);
+      document.getElementsByClassName("ddv-canvas-container")[0].addEventListener("touchmove",function(e) {
+        let scrollTop = document.getElementsByClassName("ddv-scroll-container")[0].scrollTop;
+        let scrollEnd = document.getElementsByClassName("ddv-scroll-container")[0].scrollTop+document.getElementsByClassName("ddv-scroll-container")[0].clientHeight;
+        let offset = Math.ceil(scrollEnd) - document.getElementsByClassName("ddv-scroll-container")[0].scrollHeight;
+        let offsetY = touchedPoint.pageY - e.touches[0].pageY;
+        if (offset >= 0 || scrollTop === 0) { //reach bottom or top
+          window.scrollBy(0,offsetY);
+        }
+      }, true);
     }
 
     function switchTab(tabName){
@@ -754,9 +809,11 @@
 
     async function save(){
       showProgress("Saving...");
+      let outputType = document.getElementById("outputTypeSelect").selectedOptions[0].value;
       const pdfSettings = {
-        saveAnnotation: "annotation"
+        saveAnnotation:outputType
       };
+      console.log(pdfSettings);
       const blob = await doc.saveToPdf(pdfSettings);
       downloadBlob(blob);
       hideProgress();
@@ -871,10 +928,12 @@
     }
 
     function hideFullscreenContainer(){
+      document.getElementsByClassName("container")[0].style.display = "block";
       document.getElementById("fullscreenContainer").classList.remove("active");
     }
 
     function showFullscreenContainer(){
+      document.getElementsByClassName("container")[0].style.display = "none";
       document.getElementById("fullscreenContainer").classList.add("active");
     }
 
@@ -926,7 +985,7 @@
     }
 
     async function loadDDN(){
-      showProgress("Loading Dynamsoft Document Normalzier...");
+      showProgress("Loading Dynamsoft Document Normalizer...");
       await loadLibrary("https://cdn.jsdelivr.net/npm/dynamsoft-core@3.0.30/dist/core.js","text/javascript");
       await loadLibrary("https://cdn.jsdelivr.net/npm/dynamsoft-license@3.0.20/dist/license.js","text/javascript");
       await loadLibrary("https://cdn.jsdelivr.net/npm/dynamsoft-document-normalizer@2.0.20/dist/ddn.js","text/javascript");
@@ -1084,6 +1143,61 @@
 
     function hideInputModal(){
       document.getElementsByClassName("input-modal")[0].classList.remove("active");
+    }
+
+    function showRedactModal() {
+      document.getElementsByClassName("redact-modal")[0].classList.add("active");
+    }
+
+    function hideRedactModal(){
+      document.getElementsByClassName("redact-modal")[0].classList.remove("active");
+    }
+
+    async function redact(){
+      hideRedactModal();
+      showProgress("Processing...");
+      if (!tessWorker) {
+        await loadLibrary("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js","text/javascript");
+        worker = await Tesseract.createWorker('eng', 1, {
+          logger: m => console.log(m),
+        });
+      }
+      let wordsToRedact = document.getElementById("words").value.split(" ");
+      let index = browseViewer.getCurrentPageIndex();
+      if (index >= 0) {
+        const blob = await doc.saveToJpeg(index);
+        const ret = await worker.recognize(blob);
+        const words = ret.data.words;
+        console.log(words);
+        for (let i = 0; i < words.length; i++) {
+          const word = words[i];
+          for (let j = 0; j < wordsToRedact.length; j++) {
+            const wordToRedact = wordsToRedact[j];
+            if (word.text.toLowerCase() == wordToRedact.toLowerCase()){
+              addRedactAnnotation(index,word.bbox)
+              break;
+            }
+          }
+        }
+      }
+      hideProgress();
+    }
+
+    async function addRedactAnnotation(pageIndex,bbox){
+      //bbox:x0: 46, y0: 42, x1: 112, y1: 57
+      const pageUid = editViewer.indexToUid(pageIndex);
+      const pageData = await doc.getPageData(pageUid);
+      const scaleX = pageData.mediaBox.width / pageData.raw.width;
+      const scaleY = pageData.mediaBox.height / pageData.raw.height;
+      const options = {
+        x: bbox.x0*scaleX,
+        y: bbox.y0*scaleY,
+        width: (bbox.x1 - bbox.x0)*scaleX,
+        height: (bbox.y1 - bbox.y0)*scaleY,
+        borderColor: "black",
+        background: "black"
+      }
+      const rect = Dynamsoft.DDV.annotationManager.createAnnotation(pageUid, "rectangle",options);
     }
   </script>
 </body>
