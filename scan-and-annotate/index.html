@@ -73,7 +73,8 @@
       text-align: center;
       cursor: pointer;
       transition: ease-in .2s all;
-      font-family: "sans-serif"
+      font-family: "sans-serif";
+      white-space: nowrap;
     }
 
     .d-primary-btn:hover {
@@ -99,6 +100,8 @@
       justify-content: flex-start;
       align-items: center;
       height: 40px;
+      overflow-x: auto;
+      max-width: 100%;
     }
 
     .actions .d-primary-btn {
@@ -206,15 +209,22 @@
       .scanner {
         flex-wrap: wrap;
       }
+
       .options {
         flex-basis: 100%;
       }
+
       .viewer {
         flex-basis: 100%;
       }
 
       .scanner {
         height: auto;
+      }
+
+      .actions {
+        height: auto;
+        flex-wrap: wrap;
       }
 
       #container {
@@ -322,6 +332,14 @@
             <a class="d-primary-btn" onclick="annotate();">Annotate</a>
             <a class="d-primary-btn" onclick="showRedactModal();">Redact</a>
             <a class="d-primary-btn" onclick="save();">Save as PDF</a>
+            <label>
+              Output type:
+              <select id="outputTypeSelect">
+                <option value="annotation" selected>Keep Annotations</option>
+                <option value="flatten">Flatten</option>
+                <option value="image">Save annotations as images</option>
+              </select>
+            </label>
           </div>
         </div>
       </div>
@@ -787,9 +805,11 @@
 
     async function save(){
       showProgress("Saving...");
+      let outputType = document.getElementById("outputTypeSelect").selectedOptions[0].value;
       const pdfSettings = {
-        saveAnnotation: "annotation"
+        saveAnnotation:outputType
       };
+      console.log(pdfSettings);
       const blob = await doc.saveToPdf(pdfSettings);
       downloadBlob(blob);
       hideProgress();
