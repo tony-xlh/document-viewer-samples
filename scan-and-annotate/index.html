@@ -1157,18 +1157,20 @@
       hideProgress();
     }
 
-    function addRedactAnnotation(pageIndex,bbox){
+    async function addRedactAnnotation(pageIndex,bbox){
       //bbox:x0: 46, y0: 42, x1: 112, y1: 57
       const pageUid = editViewer.indexToUid(pageIndex);
+      const pageData = await doc.getPageData(pageUid);
+      const scaleX = pageData.mediaBox.width / pageData.raw.width;
+      const scaleY = pageData.mediaBox.height / pageData.raw.height;
       const options = {
-        x: bbox.x0,
-        y: bbox.y0,
-        width: bbox.x1 - bbox.x0,
-        height: bbox.y1 - bbox.y0,
+        x: bbox.x0*scaleX,
+        y: bbox.y0*scaleY,
+        width: (bbox.x1 - bbox.x0)*scaleX,
+        height: (bbox.y1 - bbox.y0)*scaleY,
         borderColor: "black",
         background: "black"
       }
-      console.log(options);
       const rect = Dynamsoft.DDV.annotationManager.createAnnotation(pageUid, "rectangle",options);
     }
   </script>
