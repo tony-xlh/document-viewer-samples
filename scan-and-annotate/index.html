@@ -1200,6 +1200,7 @@
         height: (bbox.y1 - bbox.y0)*scaleY,
         borderColor: "black",
         background: "black"
+        //flags:{readOnly:true} //enable read only if you do not need to interact with the annotation
       }
       const rect = Dynamsoft.DDV.annotationManager.createAnnotation(pageUid, "rectangle",options);
     }
