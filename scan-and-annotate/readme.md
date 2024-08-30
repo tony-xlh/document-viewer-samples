@@ -6,6 +6,8 @@ This is an integrated demo for Dynamsoft's SDKs:
 * Dynamsoft Document Viewer. View scanned document images, add annotations and save them as PDF or image files.
 * Dynamsoft Document Normalizer. Detect the document boundaries.
 
+[Online demo](https://tony-xlh.github.io/document-viewer-samples/scan-and-annotate/index.html)
+
 Demo videos:
 
 1. Scan a document image via a document scanner and redact some sensitive info like names.
