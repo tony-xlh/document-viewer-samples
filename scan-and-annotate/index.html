@@ -350,6 +350,7 @@
     let captureViewer;
     let perspectiveViewer;
     let license = "";
+    let touchedPoint;
     let oneDayTrial = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ==";
     
     showInputModal();
@@ -635,6 +636,18 @@
       if (screen.width < 600) {
         browseViewer.setRowAndColumn(1,1);
       }
+      document.getElementsByClassName("ddv-canvas-container")[0].addEventListener("touchstart",function(e) {
+        touchedPoint = e.touches[0];
+      })
+      document.getElementsByClassName("ddv-canvas-container")[0].addEventListener("touchmove",function(e) {
+        let scrollTop = document.getElementsByClassName("ddv-scroll-container")[0].scrollTop;
+        let scrollEnd = document.getElementsByClassName("ddv-scroll-container")[0].scrollTop+document.getElementsByClassName("ddv-scroll-container")[0].clientHeight;
+        let offset = Math.ceil(scrollEnd) - document.getElementsByClassName("ddv-scroll-container")[0].scrollHeight;
+        let offsetY = touchedPoint.pageY - e.touches[0].pageY;
+        if (offset >= 0 || scrollTop === 0) { //reach bottom or top
+          window.scrollBy(0,offsetY);
+        }
+      })
     }
 
     function switchTab(tabName){
@@ -926,7 +939,7 @@
     }
 
     async function loadDDN(){
-      showProgress("Loading Dynamsoft Document Normalzier...");
+      showProgress("Loading Dynamsoft Document Normalizer...");
       await loadLibrary("https://cdn.jsdelivr.net/npm/dynamsoft-core@3.0.30/dist/core.js","text/javascript");
       await loadLibrary("https://cdn.jsdelivr.net/npm/dynamsoft-license@3.0.20/dist/license.js","text/javascript");
       await loadLibrary("https://cdn.jsdelivr.net/npm/dynamsoft-document-normalizer@2.0.20/dist/ddn.js","text/javascript");
