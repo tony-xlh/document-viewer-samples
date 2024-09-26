@@ -898,24 +898,30 @@
     async function loadFiles(){
       let filesInput = document.getElementById("files");
       let files = filesInput.files;
-      for (let index = 0; index < files.length; index++) {
-        const file = files[index];
-        const blob = await readFileAsBlob(file);
-        if (file.type === "application/pdf") {
-          let pdfSource = {
-            convertMode:document.getElementById("convertMode").selectedOptions[0].value,
-            fileData:blob,
-            renderOptions:{
-              renderAnnotations:document.getElementById("annotationMode").selectedOptions[0].value
+      showProgress("Importing...");
+      try {
+        for (let index = 0; index < files.length; index++) {
+          const file = files[index];
+          const blob = await readFileAsBlob(file);
+          if (file.type === "application/pdf") {
+            let pdfSource = {
+              convertMode:document.getElementById("convertMode").selectedOptions[0].value,
+              fileData:blob,
+              renderOptions:{
+                renderAnnotations:document.getElementById("annotationMode").selectedOptions[0].value
+              }
             }
+            console.log(pdfSource);
+            await doc.loadSource(pdfSource); // load pdf
+          }else{
+            await doc.loadSource(blob); // load image
           }
-          console.log(pdfSource);
-          await doc.loadSource(pdfSource); // load pdf
-        }else{
-          await doc.loadSource(blob); // load image
         }
+      } catch (error) {
+        alert(Dynamsoft.DDV.lastError.cause.message);
       }
       filesInput.value = "";
+      hideProgress();
     }
 
     function readFileAsBlob(file){
