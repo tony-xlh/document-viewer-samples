@@ -200,6 +200,10 @@
       visibility: inherit;
     }
 
+    .pdf-import-modal.active {
+      visibility: inherit;
+    }
+
     .input-modal input {
       width: calc(100% - 10px);
     }
@@ -379,6 +383,33 @@
       <br/>
       <button id="redactBtn" onclick="redact();">Redact</button>
       <button onclick="hideRedactModal();">Cancel</button>
+    </div>
+  </div>
+  <div class="modal pdf-import-modal">
+    <div>
+      <div>
+        Please set how to read the PDF file:
+      </div>
+      <br/>
+      <label>
+        Convert mode:
+        <select id="convertMode">
+          <option value="cm/auto" selected>Auto</option>
+          <option value="cm/renderall">Render all</option>
+          <option value="cm/imageonly">Image-only</option>
+        </select>
+      </label>
+      <br/>
+      <label>
+        Annotation mode:
+        <select id="annotationMode">
+          <option value="loadAnnotations" selected>Load annotations</option>
+          <option value="noAnnotations">NO annotations</option>
+          <option value="renderAnnotations">Render annotations</option>
+        </select>
+      </label>
+      <br/>
+      <button id="confirmPDFBtn" onclick="confirmPDF();">Okay</button>
     </div>
   </div>
   <script type="text/javascript">
@@ -836,22 +867,53 @@
     async function filesSelected(){
       let filesInput = document.getElementById("files");
       let files = filesInput.files;
-      if (files.length>0) {
-        for (let index = 0; index < files.length; index++) {
-          const file = files[index];
-          const blob = await readFileAsBlob(file);
-          if (file.type === "application/pdf") {
-            let pdfSource = {
-              fileData:blob,
-              renderOptions:{
-                renderAnnotations:Dynamsoft.DDV.EnumAnnotationRenderMode.LOAD_ANNOTATIONS
-              }
+      let containsPDF = false;
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        if (file.type === "application/pdf") {
+          containsPDF = true;
+          break;
+        }
+      }
+      if (containsPDF) {
+        showPDFImportModel();
+      }else{
+        loadFiles();
+      }
+    }
+
+    function showPDFImportModel(){
+      document.getElementsByClassName("pdf-import-modal")[0].classList.add("active");
+    }
+
+    function hidePDFImportModel(){
+      document.getElementsByClassName("pdf-import-modal")[0].classList.remove("active");
+    }
+
+    function confirmPDF(){
+      hidePDFImportModel();
+      loadFiles();
+    }
+
+    async function loadFiles(){
+      let filesInput = document.getElementById("files");
+      let files = filesInput.files;
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        const blob = await readFileAsBlob(file);
+        if (file.type === "application/pdf") {
+          let pdfSource = {
+            convertMode:document.getElementById("convertMode").selectedOptions[0].value,
+            fileData:blob,
+            renderOptions:{
+              renderAnnotations:document.getElementById("annotationMode").selectedOptions[0].value
             }
-            await doc.loadSource(pdfSource); // load pdf
-          }else{
-            await doc.loadSource(blob); // load image
           }
-        }  
+          console.log(pdfSource);
+          await doc.loadSource(pdfSource); // load pdf
+        }else{
+          await doc.loadSource(blob); // load image
+        }
       }
     }
 
