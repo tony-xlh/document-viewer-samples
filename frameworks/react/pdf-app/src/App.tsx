@@ -15,18 +15,18 @@ function App() {
   },[])
 
   const initDDV = async () => {
-    DDV.Core.license = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMTAwMjI3NzYzLVRYbFFjbTlxIiwibWFpblNlcnZlclVSTCI6Imh0dHBzOi8vbWx0cy5keW5hbXNvZnQuY29tIiwib3JnYW5pemF0aW9uSUQiOiIxMDAyMjc3NjMiLCJzdGFuZGJ5U2VydmVyVVJMIjoiaHR0cHM6Ly9zbHRzLmR5bmFtc29mdC5jb20iLCJjaGVja0NvZGUiOjE4OTc4MDUzNDV9"; // Public trial license which is valid for 24 hours
+    DDV.Core.license = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="; // Public trial license which is valid for 24 hours
     DDV.Core.engineResourcePath = "assets/ddv-resources/engine";// Lead to a folder containing the distributed WASM files
     await DDV.Core.loadWasm();
     await DDV.Core.init(); 
+    // Configure image filter feature which is in edit viewer
+    DDV.setProcessingHandler("imageFilter", new DDV.ImageFilter());
     const config = DDV.getDefaultUiConfig("editViewer", {includeAnnotationSet: true}) as UiConfig;
     // Create an edit viewer
     editViewer.current = new DDV.EditViewer({
       container: "container",
       uiConfig: config,
     });
-    // Configure image filter feature which is in edit viewer
-    DDV.setProcessingHandler("imageFilter", new DDV.ImageFilter());
   }
 
   return (
