@@ -1,34 +1,39 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useRef } from 'react'
 import './App.css'
+import { DDV, EditViewer, UiConfig } from 'dynamsoft-document-viewer';
+import "dynamsoft-document-viewer/dist/ddv.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const initializing = useRef(false);
+  const editViewer = useRef<EditViewer|undefined>();
+  useEffect(()=>{
+    console.log("mounted");
+    if (initializing.current == false) {
+      initializing.current = true;
+      initDDV();
+    }
+  },[])
+
+  const initDDV = async () => {
+    DDV.Core.license = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMTAwMjI3NzYzLVRYbFFjbTlxIiwibWFpblNlcnZlclVSTCI6Imh0dHBzOi8vbWx0cy5keW5hbXNvZnQuY29tIiwib3JnYW5pemF0aW9uSUQiOiIxMDAyMjc3NjMiLCJzdGFuZGJ5U2VydmVyVVJMIjoiaHR0cHM6Ly9zbHRzLmR5bmFtc29mdC5jb20iLCJjaGVja0NvZGUiOjE4OTc4MDUzNDV9"; // Public trial license which is valid for 24 hours
+    DDV.Core.engineResourcePath = "assets/ddv-resources/engine";// Lead to a folder containing the distributed WASM files
+    await DDV.Core.loadWasm();
+    await DDV.Core.init(); 
+    const config = DDV.getDefaultUiConfig("editViewer", {includeAnnotationSet: true}) as UiConfig;
+    // Create an edit viewer
+    editViewer.current = new DDV.EditViewer({
+      container: "container",
+      uiConfig: config,
+    });
+    // Configure image filter feature which is in edit viewer
+    DDV.setProcessingHandler("imageFilter", new DDV.ImageFilter());
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div id="app">
+      <h2>Document Viewer Demo</h2>
+      <div id="container"></div>
+    </div>
   )
 }
 
