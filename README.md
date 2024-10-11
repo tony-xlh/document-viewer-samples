@@ -18,3 +18,11 @@ Scan documents via document scanners or cameras and then add annotations.
 * [Edit Viewer](https://tony-xlh.github.io/document-viewer-samples/pan-and-zoom/edit-viewer.html). Pan and zoom demo using [Dynamsoft Document Viewer's Edit Viewer](https://www.dynamsoft.com/document-viewer/docs/introduction/index.html).
 * [Viewer from Scratch](https://tony-xlh.github.io/document-viewer-samples/pan-and-zoom/from-scratch.html). Pan and zoom demo using a viewer from scratch.
 
+## Frameworks
+
+PDF annotation demos in frameworks:
+
+* [vue](frameworks/vue/pdf-app)
+* [react](frameworks/react/pdf-app)
+
+
