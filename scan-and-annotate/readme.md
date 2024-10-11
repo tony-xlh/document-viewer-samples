@@ -23,4 +23,6 @@ Demo videos:
     https://github.com/user-attachments/assets/91e5fcba-f09d-43aa-b7cb-c501a8fa34b0
 
 
+## Blog
 
+[How to Add PDF Annotations to Scanned Documents with JavaScript](https://www.dynamsoft.com/codepool/pdf-annotations-scanned-document-javascript.html)
