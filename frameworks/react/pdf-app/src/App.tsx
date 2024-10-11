@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { DDV, EditViewer, UiConfig } from 'dynamsoft-document-viewer';
 import "dynamsoft-document-viewer/dist/ddv.css";
 
 function App() {
   const initializing = useRef(false);
+  const [initialized,setInitialized] = useState(false);
   const editViewer = useRef<EditViewer|undefined>();
   useEffect(()=>{
     console.log("mounted");
@@ -27,11 +28,15 @@ function App() {
       container: "container",
       uiConfig: config,
     });
+    setInitialized(true);
   }
 
   return (
     <div id="app">
       <h2>Document Viewer Demo</h2>
+      {!initialized &&
+        <div>Initializing...</div>
+      }
       <div id="container"></div>
     </div>
   )
