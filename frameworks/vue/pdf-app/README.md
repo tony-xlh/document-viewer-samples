@@ -1,5 +1,18 @@
-# Vue 3 + TypeScript + Vite
+## Document Viewer Demo in Vue
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+This is a Vue demo for [Dynamsoft Document Viewer](https://www.dynamsoft.com/document-viewer/docs/introduction/index.html).
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+Dynamsoft Document Viewer provides a set of viewers for documents.
+
+In this demo, it uses its Edit Viewer to load and view images, make annotations and save them as PDF files.
+
+## How to Run
+
+```bash
+npm install
+npm run dev
+```
+
+## License Application
+
+You can apply for Dynamsoft Document Viewer's license [here](https://www.dynamsoft.com/customer/license/trialLicense/?product=dcv&package=cross-platform).
