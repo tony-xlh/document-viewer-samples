@@ -69,6 +69,12 @@
       <input type="file" id="files" name="files" multiple onchange="filesSelected()"/>
     </label>
     <div id="viewer"></div>
+    <div>
+      <label>
+        Multiple selection by tapping:
+        <input type="checkbox" value="false" id="tapToMultiSelect"/>
+      </label>
+    </div>
     <button onclick="deleteSelected()">Deleted Selected</button>
   </div>
 </body>
@@ -114,7 +120,7 @@ function appendImage(url){
   thumbnailContainer.appendChild(img);
   viewer.appendChild(thumbnailContainer);
   thumbnailContainer.addEventListener("click",function(){
-    const isMultiSelect = event.ctrlKey || event.metaKey;
+    const isMultiSelect = event.ctrlKey || event.metaKey || document.getElementById("tapToMultiSelect").checked;
     const isRangeSelect = event.shiftKey;
     const index = getIndex(thumbnailContainer);
     if (isMultiSelect) {
@@ -208,8 +214,6 @@ function selectRange(start, end) {
     selectOne(thumbnails[i]);
   }
 }
-
-
 
 </script>
 </html>
