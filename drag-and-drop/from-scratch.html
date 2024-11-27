@@ -130,6 +130,10 @@ function appendImage(url){
     img.classList.add("dragHover");
     targetImg = img;
   })
+  img.addEventListener("dragover",function(e){
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  })
   img.addEventListener("dragleave",function(){
     img.classList.remove("dragHover");
   })
@@ -174,6 +178,9 @@ function reorder(){
     if (item.classList.contains("selected")) {
       selected.push(item);
       selectedIndex = index;
+      if (item === targetThumbnailContainer) { //abort if the target image is also selected
+        return;
+      }
     }
     if (item === targetThumbnailContainer) {
       targetIndex = index;
