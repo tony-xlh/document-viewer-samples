@@ -168,11 +168,12 @@ function reorder(){
   const thumbnails = document.getElementsByClassName("thumbnail");
   const selected = [];
   let targetIndex = -1;
+  let selectedIndex = -1;
   for (let index = thumbnails.length - 1; index >=0 ; index--) {
     const item = thumbnails[index];
     if (item.classList.contains("selected")) {
       selected.push(item);
-      item.setAttribute("data-index",index);
+      selectedIndex = index;
     }
     if (item === targetThumbnailContainer) {
       targetIndex = index;
@@ -180,10 +181,13 @@ function reorder(){
   }
   console.log(selected);
   const viewer = document.getElementById("viewer");
+  if (selectedIndex>targetIndex) {
+    selected.reverse();
+  }
   selected.forEach(function(one) {
     console.log(one);
     console.log(targetThumbnailContainer);
-    if (one.getAttribute("data-index")<targetIndex) {
+    if (selectedIndex<targetIndex) {
       viewer.insertBefore(one,targetThumbnailContainer.nextSibling);
     }else{
       viewer.insertBefore(one,targetThumbnailContainer);
