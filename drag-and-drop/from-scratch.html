@@ -130,6 +130,10 @@ function appendImage(url){
     img.classList.add("dragHover");
     targetImg = img;
   })
+  img.addEventListener("dragover",function(e){
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  })
   img.addEventListener("dragleave",function(){
     img.classList.remove("dragHover");
   })
