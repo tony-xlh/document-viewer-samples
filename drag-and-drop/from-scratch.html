@@ -118,7 +118,7 @@ function appendImage(url){
   let thumbnailContainer = document.createElement("div");
   thumbnailContainer.className = "thumbnail";
   let img = document.createElement("img");
-  img.setAttribute("draggable",true);
+  
   img.src = url;
   img.onload = function(){
     let height = 130/(img.naturalWidth/img.naturalHeight);
@@ -164,6 +164,7 @@ function appendImage(url){
 function reorder(){
   console.log("reorder");
   const targetThumbnailContainer = targetImg.parentNode;
+  targetImg.classList.remove("dragHover");
   const thumbnails = document.getElementsByClassName("thumbnail");
   const selected = [];
   let targetIndex = -1;
@@ -242,15 +243,24 @@ function deleteSelected(){
 
 function toggleSelection(thumbnail) {
   thumbnail.classList.toggle('selected');
+  if (thumbnail.classList.contains('selected')) {
+    thumbnail.getElementsByTagName("img")[0].setAttribute("draggable",true);
+  }else{
+    thumbnail.getElementsByTagName("img")[0].setAttribute("draggable",false);
+  }
 }
 
 function selectOne(thumbnail) {
   thumbnail.classList.add('selected');
+  thumbnail.getElementsByTagName("img")[0].setAttribute("draggable",true);
 }
 
 function clearSelection() {
   let thumbnails = document.querySelectorAll(".thumbnail");
-  thumbnails.forEach(thumbnail => thumbnail.classList.remove('selected'));
+  thumbnails.forEach(thumbnail => {
+    thumbnail.classList.remove('selected')
+    thumbnail.getElementsByTagName("img")[0].setAttribute("draggable",false);
+  });
 }
 
 function selectRange(start, end) {
