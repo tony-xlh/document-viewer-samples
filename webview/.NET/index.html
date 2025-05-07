@@ -179,7 +179,7 @@
       const message = {
         name: 'loadFile'
       }
-      sendMessageToDotNet(JSON.stringify(message));
+      sendMessageToDotNet(JSON.stringify([message]));
     });
     await initForLiveScanning();
     switchViewer(0,0,0,1);
