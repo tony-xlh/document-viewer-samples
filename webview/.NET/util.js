@@ -256,7 +256,6 @@ class MyDesktopViewer extends MyViewer {
         return await this.saveAsPdf(this.editViewer.thumbnail?.getSelectedPageIndices(), settings);
     }
 }
-
 class MyViewerApp {
     static productkey = "";
     static messageType = "";
@@ -300,19 +299,29 @@ class MyViewerApp {
         }
     }
 
+    static async initView(options) {
+        return await MyViewerApp.createView(options);
+    }
+
     static findFunction(ins, name) {
+        if (!ins) {
+            if (name === 'initView') {
+                return this.initView;
+            }
+            return null;
+        }
+
         let proto = Object.getPrototypeOf(ins);
         while (proto) {
             if (proto.hasOwnProperty(name)) {
                 //console.log(`${name} defined on:`, proto.constructor.name);
-                return proto;
+                return proto[name];
             }
             proto = Object.getPrototypeOf(proto);
         }
         //console.log(`${name} not found in prototype chain.`);
         return null;
     }
-
 
     static async invokeJavaScript(name, params, context) {
         let error = '';
@@ -325,7 +334,7 @@ class MyViewerApp {
                 const decodedParams = JSON.parse(params);
 
                 // Dynamically call the function with the provided parameters
-                const result = await func[name](...decodedParams);
+                const result = await func.bind(this.myViewer)(...decodedParams);
 
                 // If a callback is provided, call it with the result
                 if (context) {
@@ -457,10 +466,6 @@ window.addEventListener("load", function () {
     MyViewerApp.invokeDotNet('load', 'true', '');
     MyViewerApp.messageType = ''; // reset this, after initView, we will set it as real type
 });
-
-async function initView(options) {
-    return MyViewerApp.createView(options);
-}
 
 async function invokeJavaScript(name, params, context) {
     return MyViewerApp.invokeJavaScript(name, params, context);
