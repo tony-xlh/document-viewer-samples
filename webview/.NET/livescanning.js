@@ -262,6 +262,10 @@ function bindEvents(){
     });
 }
 
+function showEditor(){
+    switchViewer(0,0,1,0);
+}
+
 // Define a function to control the viewers' visibility
 function switchViewer(c,p,e,b) {
     captureViewer.hide();
