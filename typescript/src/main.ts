@@ -1,4 +1,4 @@
-import './style.css'
+import "dynamsoft-document-viewer/dist/ddv.css";
 import { DDV } from 'dynamsoft-document-viewer';
 
 DDV.on("error", e => { console.log(e.cause); });
