@@ -30,4 +30,8 @@ PDF annotation demos in frameworks:
 * [vue](frameworks/vue/pdf-app)
 * [react](frameworks/react/pdf-app)
 
+## Other Samples
+
+[Import and Export Annotations](https://tony-xlh.github.io/document-viewer-samples/import-and-export-annotation/index.html). Import and export annotations using JSON.
+
 
