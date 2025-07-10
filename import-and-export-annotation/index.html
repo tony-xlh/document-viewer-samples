@@ -63,6 +63,11 @@
       const annotations = Dynamsoft.DDV.annotationManager.getAnnotationsByPage(page);
       for (let j = 0; j < annotations.length; j++) {
         const annotation = annotations[j];
+        console.log(annotation);
+        if (annotation.type === "unknown") {
+          console.warn("Unknown annotation type found, skipping export for this annotation.");
+          continue; // Skip unknown annotations
+        }
         const exportedAnnotation = {
           type: annotation.type,
           options: annotation.getOptions()
