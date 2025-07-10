@@ -64,8 +64,8 @@
       for (let j = 0; j < annotations.length; j++) {
         const annotation = annotations[j];
         console.log(annotation);
-        if (annotation.type === "unknown") {
-          console.warn("Unknown annotation type found, skipping export for this annotation.");
+        if (annotation.type === "unknown" || annotation.type === "incomplete") {
+          console.warn("Unknown or incomplete annotation type found, skipping export for this annotation.");
           continue; // Skip unknown annotations
         }
         const exportedAnnotation = {
