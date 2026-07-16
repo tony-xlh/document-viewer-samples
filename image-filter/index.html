@@ -114,16 +114,19 @@
   }
   class MyImageFilter extends Dynamsoft.DDV.ImageFilter {
     async applyFilter(image, type) {
-      console.log(type);
       if (type == "adaptive") {
         try {
           const DSImageData = await Dynamsoft.Utility.ImageIO.readFromFile(image.data);
           let binary = await Dynamsoft.Utility.ImageProcessor.convertToBinaryLocal(DSImageData, 0, 10, true);
           let file = await Dynamsoft.Utility.ImageIO.saveToFile(binary, "filtered_image.png", false);
           const pureBlob = new Blob([file], { type: file.type });
-          return new Promise((r, _j) => {
-            r(pureBlob);
-          });
+          const newImage = {
+            data: pureBlob,
+            height: image.height,
+            width: image.width,
+            type: 4
+          }
+          return super.applyFilter(newImage, "blackAndWhite");
         } catch (e) {
           console.error("applyFilter error:", e);
           throw e;
