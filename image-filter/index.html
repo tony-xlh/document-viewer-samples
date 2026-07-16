@@ -7,8 +7,9 @@
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>DDV - HelloWorld</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dynamsoft-document-viewer@latest/dist/ddv.css">
-  <script src="https://cdn.jsdelivr.net/npm/dynamsoft-document-viewer@latest/dist/ddv.js"></script>
+  <script src="https://cdn.jsdmirror.com/npm/dynamsoft-capture-vision-bundle/dist/dcv.bundle.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdmirror.com/npm/dynamsoft-document-viewer@latest/dist/ddv.css">
+  <script src="https://cdn.jsdmirror.com/npm/dynamsoft-document-viewer@latest/dist/ddv.js"></script>
 </head>
 <style>
   #app {
@@ -40,10 +41,15 @@
     // Public trial license which is valid for 24 hours
     // You can request a 30-day trial key from https://www.dynamsoft.com/customer/license/trialLicense/?product=ddv
     Dynamsoft.DDV.Core.license = "DLS2eyJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSJ9";
-    Dynamsoft.DDV.Core.engineResourcePath = "https://cdn.jsdelivr.net/npm/dynamsoft-document-viewer@latest/dist/engine";
+    Dynamsoft.DDV.Core.engineResourcePath = "https://cdn.jsdmirror.com/npm/dynamsoft-document-viewer@latest/dist/engine";
     // Preload DDV Resource
     Dynamsoft.DDV.Core.loadWasm();
+
     await Dynamsoft.DDV.Core.init();
+
+    // Initialize DCV bundle's ImageProcessor (separate from DDV)
+    Dynamsoft.Core.CoreModule.loadWasm();
+
     let config = {
       type: Dynamsoft.DDV.Elements.Layout,
       flexDirection: "column",
@@ -99,12 +105,47 @@
         }
       ]
     }
-    const imageFilter = new Dynamsoft.DDV.ImageFilter();
+    const imageFilter = new MyImageFilter();
     Dynamsoft.DDV.setProcessingHandler("imageFilter", imageFilter);
     editViewer = new Dynamsoft.DDV.EditViewer({
       container: "container",
       uiConfig: config
     });
+  }
+  class MyImageFilter extends Dynamsoft.DDV.ImageFilter {
+    async applyFilter(image, type) {
+      console.log(type);
+      if (type == "adaptive") {
+        try {
+          const DSImageData = await Dynamsoft.Utility.ImageIO.readFromFile(image.data);
+          let binary = await Dynamsoft.Utility.ImageProcessor.convertToBinaryLocal(DSImageData, 0, 10, true);
+          let file = await Dynamsoft.Utility.ImageIO.saveToFile(binary, "filtered_image.png", false);
+          const pureBlob = new Blob([file], { type: file.type });
+          return new Promise((r, _j) => {
+            r(pureBlob);
+          });
+        } catch (e) {
+          console.error("applyFilter error:", e);
+          throw e;
+        }
+      } else {
+        return super.applyFilter(image, type);
+      }
+    };
+    get defaultFilterType() {
+      return "original"
+    };
+    querySupported() {
+      let supported = super.querySupported();
+      supported.push({
+        type: "adaptive",
+        label: "Adaptive"
+      });
+      return supported;
+    };
+    destroy() {
+      super.destroy()
+    };
   }
 
 </script>
