@@ -678,7 +678,7 @@
 
     async function loadDWTIfSwitched(tabName){
       if (tabName === "scanner" && !DWObject) {
-        await loadLibrary("https://unpkg.com/dwt@18.5.0/dist/dynamsoft.webtwain.min.js","text/javascript");
+        await loadLibrary("https://cdn.jsdelivr.net/npm/dwt/dist/dynamsoft.webtwain.min.js","text/javascript");
         initDWT();
       }
     }
@@ -743,7 +743,10 @@
     function initDWT(){
       Dynamsoft.DWT.AutoLoad = false;
       Dynamsoft.DWT.Containers = [];
-      Dynamsoft.DWT.ResourcesPath = "https://unpkg.com/dwt@18.5.0/dist";
+      Dynamsoft.DWT.ResourcesPath =
+        "https://cdn.jsdelivr.net/npm/dwt/dist";
+      Dynamsoft.DWT.ServiceInstallerLocation =
+        "https://unpkg.com/dwt/dist/dist/";
       Dynamsoft.DWT.ProductKey = license;
       Dynamsoft.DWT.CreateDWTObjectEx(
         {
